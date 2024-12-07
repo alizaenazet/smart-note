@@ -1,16 +1,12 @@
 # smart_note
 
-A new Flutter project.
+## Code of conduct
 
-## Getting Started
+### Branch and commit convention
+- Semua conflict harap di solve pada level developlment, jangan solve conflict pada tahap remot.
+- Ikuti penamaan dan aturan Branch serta Commit message pada 2 artikel berikut :
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- [Branch name  and Commit message](https://dev.to/varbsan/a-simplified-convention-for-naming-branches-and-commits-in-git-il4)
+  
+- [Branch rules](https://medium.com/android-news/gitflow-with-github-c675aa4f606a) 
+  
