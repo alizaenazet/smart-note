@@ -24,10 +24,13 @@ android {
         applicationId = "com.example.smart_note"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Auth0 domain
+        manifestPlaceholders += [auth0Domain: "dev-kyls15gex83xgz5e.us.auth0.com", auth0Scheme: "smartnote"]
     }
 
     buildTypes {
