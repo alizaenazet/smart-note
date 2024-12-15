@@ -5,7 +5,6 @@ import 'package:smart_note/model/task.dart';
 import 'package:smart_note/model/task_status.dart';
 import 'package:smart_note/shared/theme_shared.dart';
 
-import '../shared/theme_shared.dart';
-
 part 'login.dart';
+part 'detail-note.dart';
 part 'dashboard.dart';
