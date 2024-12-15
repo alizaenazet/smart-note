@@ -13,6 +13,8 @@ class _DashboardState extends State<Dashboard> {
   int ongoingTasksCount = 0;
   List<Note> notes = [];
   Credentials? _credentials;
+  int _selectedIndex = 0; 
+  late final List<Widget> _pages;
 
   late Auth0 auth0;
 
@@ -20,7 +22,18 @@ class _DashboardState extends State<Dashboard> {
   void initState() {
     super.initState();
     auth0 = Auth0('dev-kyls15gex83xgz5e.us.auth0.com', 'DQBYRNAseJL4FpWriBhUrlqU54HumA0l');
+     _pages = [
+      Dashboard(user: widget.user), 
+      CompletedTask(userId: '')
+    ];
   }
+  
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+  
 
   Future<void> _logout() async {
     try {
@@ -48,6 +61,7 @@ class _DashboardState extends State<Dashboard> {
   List<Note> get completedNotes {
     return notes.where((note) => note.tasks.any((task) => task.status == TaskStatus.completed)).toList();
   }
+  
  @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,6 +86,7 @@ class _DashboardState extends State<Dashboard> {
                                 if (widget.user.nickname != null)
                                   Text(
                                     'Hi ${widget.user.nickname!}', 
+                                    style: title,
                                   ),
                                 Text(
                                   '$ongoingTasksCount tasks ongoing',
@@ -173,6 +188,10 @@ class _DashboardState extends State<Dashboard> {
           },
         ),
       ),
+       bottomNavigationBar: BottomNavBarWidget(
+      currentIndex: _selectedIndex,
+      onItemTapped: _onItemTapped,
+    ),
     );
   }
 }

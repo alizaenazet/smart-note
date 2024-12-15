@@ -16,4 +16,8 @@ class Note {
     required this.tasks,
     required this.icon,
   });
+
+   List<Task> getCompletedTasks() {
+    return tasks.where((task) => task.isCompleted).toList();
+  }
 }
