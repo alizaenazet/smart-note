@@ -4,7 +4,10 @@ import 'package:smart_note/model/note.dart';
 import 'package:smart_note/model/task.dart';
 import 'package:smart_note/model/task_status.dart';
 import 'package:smart_note/shared/theme_shared.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 part 'login.dart';
-part 'detail-note.dart';
+part 'detail_note.dart';
+part 'bottomNavbar.dart';
 part 'dashboard.dart';
+part 'completed_task.dart';
