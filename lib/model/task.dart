@@ -2,7 +2,7 @@
 import 'package:smart_note/model/task_status.dart';
 
 class Task {
-  final String description;
+  String description;
   bool isCompleted;
   final TaskStatus status;
 
