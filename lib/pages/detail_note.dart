@@ -1,17 +1,21 @@
 part of 'pages.dart';
 
 class DetailNote extends StatefulWidget {
-  const DetailNote({super.key});
+  final UserProfile user;
+  final String? noteId;
+
+  const DetailNote({Key? key, required this.user, this.noteId}) : super(key: key);
 
   @override
   State<DetailNote> createState() => _DetailNoteState();
 }
 
 class _DetailNoteState extends State<DetailNote> {
-  final TextEditingController _notesController = TextEditingController();
+  final NoteService _noteService = NoteService();
+  List<dynamic> notes = [];
   List<Task> tasks = [];
   String _selectedStatus = 'Ongoing';
-  String _selectedIcon = 'Gardening';
+  late Note currentNote;
 
   final List<Map<String, dynamic>> iconCategories = [
     {'name': 'Gardening', 'icon': Icons.local_florist},
@@ -29,7 +33,80 @@ class _DetailNoteState extends State<DetailNote> {
   @override
   void initState() {
     super.initState();
-    // _fetchNotes();
+    if (widget.noteId != null) {
+      _fetchNote(widget.noteId!);
+    } else {
+      _initializeNewNote();
+    }
+  }
+
+  void _fetchNote(String noteId) async {
+    try {
+      final fetchedNotes = await _noteService.fetchNotes(widget.user.sub);
+      final fetchedNote = fetchedNotes.firstWhere((note) => note['id'] == noteId);
+      setState(() {
+        currentNote = Note.fromJson(fetchedNote);
+        tasks = currentNote.tasks;
+        _selectedStatus = currentNote.isComplete ? 'Completed' : 'Ongoing';
+      });
+    } catch (e) {
+      print("Error fetching note: $e");
+    }
+  }
+
+  void _initializeNewNote() {
+    setState(() {
+      currentNote = Note(
+        id: DateTime.now().toString(),
+        title: "",
+        content: "",
+        updatedAt: DateTime.now().toString(),
+        isComplete: false,
+        tasks: [],
+        icon: 'Gardening',
+      );
+    });
+  }
+
+  Future<void> _saveNote() async {
+    try {
+      currentNote.isComplete = _selectedStatus == 'Completed';
+
+      if (widget.noteId == null) {
+        // Create new note
+        await _noteService.createNote(widget.user.sub, currentNote.title, currentNote.content);
+      } else {
+        // Update existing note
+        await _noteService.editNote(
+          currentNote.id,
+          currentNote.title,
+          currentNote.content,
+        );
+      }
+      Navigator.pop(context); 
+    } catch (e) {
+      print("Error saving note: $e");
+    }
+  }
+
+  Future<void> _deleteNote() async {
+    try {
+      await _noteService.deleteNote(currentNote.id);
+      Navigator.pop(context);
+    } catch (e) {
+      print("Error deleting note: $e");
+    }
+  }
+
+  Future<void> _createTask(String taskText) async {
+    try {
+      Task newTask = await _noteService.createTask(currentNote.id, taskText);
+      setState(() {
+        tasks.add(newTask);
+      });
+    } catch (e) {
+      print("Error creating task: $e");
+    }
   }
 
   @override
@@ -60,7 +137,22 @@ class _DetailNoteState extends State<DetailNote> {
                         color: Colors.white,
                       ),
                     ),
-                    Text('Gardening', style: title),
+                    Expanded(
+                      child: TextField(
+                        controller: TextEditingController(text: currentNote.title),
+                        style: title,
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          hintText: 'Enter note title',
+                          border: InputBorder.none,
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            currentNote.title = value;
+                          });
+                        },
+                      ),
+                    ),
                     ElevatedButton(
                       onPressed: () async {
                         bool? confirm = await showDialog(
@@ -85,7 +177,7 @@ class _DetailNoteState extends State<DetailNote> {
                           },
                         );
                         if (confirm == true) {
-                          // _deleteNote(note);
+                          await _deleteNote();
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -103,7 +195,7 @@ class _DetailNoteState extends State<DetailNote> {
                 ),
                 SizedBox(height: 20),
 
-                // Task Status
+                // Task Status Dropdown
                 Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -160,6 +252,7 @@ class _DetailNoteState extends State<DetailNote> {
                 ),
                 SizedBox(height: 20),
 
+                // Notes Text Field
                 Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -167,7 +260,6 @@ class _DetailNoteState extends State<DetailNote> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
-                    controller: _notesController,
                     maxLines: null,
                     keyboardType: TextInputType.multiline,
                     style: content2,
@@ -177,6 +269,9 @@ class _DetailNoteState extends State<DetailNote> {
                           color: primaryColor.withOpacity(0.5)),
                       border: InputBorder.none,
                     ),
+                    onChanged: (text) {
+                      currentNote.content = text;
+                    },
                   ),
                 ),
                 SizedBox(height: 20),
@@ -204,7 +299,7 @@ class _DetailNoteState extends State<DetailNote> {
                       ),
                       SizedBox(height: 8),
                       DropdownButton<String>(
-                        value: _selectedIcon,
+                        value: currentNote.icon,
                         icon: ImageIcon(
                           AssetImage('assets/images/ArrowDown.png'),
                           size: 24,
@@ -222,7 +317,7 @@ class _DetailNoteState extends State<DetailNote> {
                         ),
                         onChanged: (String? newValue) {
                           setState(() {
-                            _selectedIcon = newValue!;
+                            currentNote.icon = newValue!;
                           });
                         },
                         items: iconCategories.map<DropdownMenuItem<String>>(
@@ -256,7 +351,7 @@ class _DetailNoteState extends State<DetailNote> {
                             borderRadius: BorderRadius.circular(25),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: _saveNote,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -282,7 +377,9 @@ class _DetailNoteState extends State<DetailNote> {
                             borderRadius: BorderRadius.circular(25),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          // Implement generate functionality
+                        },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -354,17 +451,11 @@ class _DetailNoteState extends State<DetailNote> {
                                       child: Text('Cancel'),
                                     ),
                                     TextButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          if (taskController.text.isNotEmpty) {
-                                            tasks.add(Task(
-                                              description: taskController.text,
-                                              status: TaskStatus.ongoing,
-                                              isCompleted: false,
-                                            ));
-                                          }
-                                        });
-                                        Navigator.pop(context);
+                                      onPressed: () async {
+                                        if (taskController.text.isNotEmpty) {
+                                          await _createTask(taskController.text);
+                                          Navigator.pop(context);
+                                        }
                                       },
                                       child: Text('Add'),
                                     ),
@@ -394,6 +485,7 @@ class _DetailNoteState extends State<DetailNote> {
                       physics: NeverScrollableScrollPhysics(),
                       itemCount: tasks.length,
                       itemBuilder: (context, index) {
+                        final task = tasks[index];
                         return Container(
                           margin: EdgeInsets.only(bottom: 8),
                           padding: EdgeInsets.all(8),
@@ -410,78 +502,64 @@ class _DetailNoteState extends State<DetailNote> {
                           ),
                           child: Row(
                             children: [
+                              // Check/Uncheck button
                               IconButton(
                                 icon: Icon(
-                                  tasks[index].isCompleted
+                                  task.isFinished
                                       ? Icons.check_circle
                                       : Icons.circle_outlined,
                                   color: primaryColor,
                                 ),
-                                onPressed: () {
+                                onPressed: () async {
                                   setState(() {
-                                    tasks[index].isCompleted =
-                                        !tasks[index].isCompleted;
-                                    if (tasks
-                                        .every((task) => task.isCompleted)) {
+                                    task.isFinished = !task.isFinished;
+                                  });
+
+                                  try {
+                                    await _noteService.updateTask(
+                                      currentNote.id,
+                                      task.id,
+                                      task.isFinished,
+                                    );
+                                    if (tasks.every((task) => task.isFinished)) {
                                       _selectedStatus = 'Completed';
                                     } else {
                                       _selectedStatus = 'Ongoing';
                                     }
-                                  });
+                                  } catch (e) {
+                                    print("Error updating task: $e");
+                                  }
                                 },
                               ),
+
+                              // Task description
                               Expanded(
                                 child: Text(
-                                  tasks[index].description,
+                                  task.text,
                                   style: TextStyle(fontSize: 16),
                                 ),
                               ),
+
+                              // Edit/Delete menu
                               PopupMenuButton<String>(
-                                onSelected: (String value) {
+                                onSelected: (String value) async {
                                   if (value == 'Edit') {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        TextEditingController editController =
-                                            TextEditingController(
-                                                text: tasks[index].description);
-                                        return AlertDialog(
-                                          title: Text('Edit Task'),
-                                          content: TextField(
-                                            controller: editController,
-                                            decoration: InputDecoration(
-                                              hintText: 'Enter new task name',
-                                            ),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child: Text('Cancel'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  tasks[index].description =
-                                                      editController.text;
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                              child: Text('Save'),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
+                                    await _showEditTaskDialog(context, index, task.text);
                                   } else if (value == 'Delete') {
-                                    setState(() {
-                                      tasks.removeAt(index);
-                                    });
+                                    bool? confirm = await _showDeleteConfirmationDialog(context);
+                                    if (confirm == true) {
+                                      try {
+                                        await _deleteTask(currentNote.id, task.id);
+                                        setState(() {
+                                          tasks.removeAt(index);
+                                        });
+                                      } catch (e) {
+                                        print("Error deleting task: $e");
+                                      }
+                                    }
                                   }
                                 },
-                                itemBuilder: (BuildContext context) =>
-                                    <PopupMenuEntry<String>>[
+                                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                                   PopupMenuItem<String>(
                                     value: 'Edit',
                                     child: Row(
@@ -523,20 +601,86 @@ class _DetailNoteState extends State<DetailNote> {
     );
   }
 
-  @override
-  void dispose() {
-    _notesController.dispose();
-    super.dispose();
+  Future<void> _deleteTask(String noteId, String taskId) async {
+    try {
+      await _noteService.deleteTask(noteId, taskId);
+    } catch (e) {
+      print("Error deleting task: $e");
+    }
+  }
+
+  Future<bool?> _showDeleteConfirmationDialog(BuildContext context) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Task'),
+          content: Text('Are you sure you want to delete this task?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditTaskDialog(BuildContext context, int index, String currentText) async {
+    TextEditingController editController = TextEditingController(text: currentText);
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Task'),
+          content: TextField(
+            controller: editController,
+            decoration: InputDecoration(
+              hintText: 'Enter new task text',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (editController.text.isNotEmpty) {
+                  try {
+                    await _noteService.updateTask(
+                      currentNote.id,
+                      tasks[index].id,
+                      tasks[index].isFinished,
+                      // editController.text,
+                    );
+                    setState(() {
+                      tasks[index].text = editController.text;
+                    });
+                    Navigator.pop(context);
+                  } catch (e) {
+                    print("Error updating task: $e");
+                  }
+                }
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
-//    factory Note.fromJson(Map<String, dynamic> json) {
-//     return Note(
-//       id: json['id'],
-//       noteId: json['note_id'] ?? '',
-//       title: json['text'],
-//       isCompleted: json['is_finished'],
-//       createdDate: DateTime.parse(json['createdDate'] ?? DateTime.now().toString()),
-//     );
-//   }
-// }

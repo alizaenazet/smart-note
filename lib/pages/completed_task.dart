@@ -1,9 +1,10 @@
 part of 'pages.dart';
 
 class CompletedTask extends StatefulWidget {
-  final String userId;
+  final UserProfile user;
+  final List<Note> notes;
 
-  const CompletedTask({super.key, required this.userId});
+  const CompletedTask({super.key, required this.user, required this.notes});
 
   @override
   State<CompletedTask> createState() => _CompletedTaskState();
@@ -13,18 +14,25 @@ class _CompletedTaskState extends State<CompletedTask> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   List<Task> completedTasks = [];
-  bool isLoading = true;
+  bool isLoading = false;
+  int _selectedIndex = 1;
 
   @override
   void initState() {
     super.initState();
-    _fetchCompletedTasks(); 
+    _fetchCompletedTasks();
   }
 
   void _fetchCompletedTasks() {
-    final List<Task> allCompletedTasks = [];
+    setState(() {
+      isLoading = true;
+    });
+
+    List<Task> allCompletedTasks = [];
     for (var note in widget.notes) {
-      allCompletedTasks.addAll(note.getCompletedTasks());
+      if (note.isComplete) {
+        allCompletedTasks.addAll(note.tasks.where((task) => task.isFinished));
+      }
     }
 
     setState(() {
@@ -34,16 +42,30 @@ class _CompletedTaskState extends State<CompletedTask> {
   }
 
   List<Task> _getTasksForDay(DateTime day) {
-    // Filter 
-    final notesForDay = widget.notes
-        .where((note) => isSameDay(note.date, day))
-        .toList();
-
-    final tasksForDay = <Task>[];
-    for (var note in notesForDay) {
-      tasksForDay.addAll(note.getCompletedTasks());
-    }
+    final tasksForDay = completedTasks.where((task) {
+      for (var note in widget.notes) {
+        if (note.tasks.contains(task)) {
+          final noteUpdatedAt = DateTime.parse(note.updatedAt);
+          return isSameDay(noteUpdatedAt, day); 
+        }
+      }
+      return false;
+    }).toList();
     return tasksForDay;
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    if (index == 0) {
+       Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Dashboard(user: widget.user),
+        ),
+      );
+    }
   }
 
   @override
@@ -53,6 +75,7 @@ class _CompletedTaskState extends State<CompletedTask> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false, // This removes the back button
         title: Center(
           child: Text(
             'Completed Tasks',
@@ -83,7 +106,8 @@ class _CompletedTaskState extends State<CompletedTask> {
                       firstDay: DateTime.utc(2000, 1, 1),
                       lastDay: DateTime.utc(2100, 12, 31),
                       focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
                       onDaySelected: (selectedDay, focusedDay) {
                         setState(() {
                           _selectedDay = selectedDay;
@@ -98,8 +122,7 @@ class _CompletedTaskState extends State<CompletedTask> {
                           color: primaryColor.withOpacity(0.8),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        leftChevronIcon:
-                            Icon(Icons.chevron_left, color: Colors.white),
+                        leftChevronVisible: false, 
                         rightChevronIcon:
                             Icon(Icons.chevron_right, color: Colors.white),
                         titleCentered: true,
@@ -135,11 +158,12 @@ class _CompletedTaskState extends State<CompletedTask> {
                     style: title,
                   ),
                   SizedBox(height: 8),
-                  if (_selectedDay != null && tasksForSelectedDay.isNotEmpty) ...[
+                  if (_selectedDay != null &&
+                      tasksForSelectedDay.isNotEmpty) ...[
                     ...tasksForSelectedDay.map((task) => ListTile(
                           leading:
                               Icon(Icons.check_circle, color: primaryColor),
-                          title: Text(task.description, style: content1),
+                          title: Text(task.text, style: content1),
                         )),
                   ] else
                     Text(
@@ -149,6 +173,26 @@ class _CompletedTaskState extends State<CompletedTask> {
                 ],
               ),
             ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        backgroundColor: Colors.white,
+        selectedItemColor: primaryColor,
+        unselectedItemColor: Colors.grey, 
+        selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal), 
+        type: BottomNavigationBarType.fixed,
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.task_rounded), 
+            label: 'Completed Tasks',
+          ),
+        ],
+      ),
     );
   }
 
@@ -170,3 +214,4 @@ class _CompletedTaskState extends State<CompletedTask> {
     return months[month - 1];
   }
 }
+

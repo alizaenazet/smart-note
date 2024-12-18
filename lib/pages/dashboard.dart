@@ -13,27 +13,47 @@ class _DashboardState extends State<Dashboard> {
   int ongoingTasksCount = 0;
   List<Note> notes = [];
   Credentials? _credentials;
-  int _selectedIndex = 0; 
-  late final List<Widget> _pages;
+  late NoteService _noteService;
+  int _selectedIndex = 0;
+  String? userId; // Will store the user's ID
 
   late Auth0 auth0;
 
   @override
   void initState() {
     super.initState();
-    auth0 = Auth0('dev-kyls15gex83xgz5e.us.auth0.com', 'DQBYRNAseJL4FpWriBhUrlqU54HumA0l');
-     _pages = [
-      Dashboard(user: widget.user), 
-      CompletedTask(userId: '')
-    ];
+    auth0 = Auth0('dev-kyls15gex83xgz5e.us.auth0.com',
+        'DQBYRNAseJL4FpWriBhUrlqU54HumA0l');
+    _noteService = NoteService();
+    _fetchNotes();
   }
-  
+
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index == 1) {
+      // Navigate to CompletedTask
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CompletedTask(user: widget.user, notes: notes),
+        ),
+      );
+    }
   }
-  
+
+  Future<void> _fetchNotes() async {
+    if (userId != null) {
+      try {
+        final fetchedNotes = await _noteService.fetchNotes(userId!);
+        setState(() {
+          notes =
+              fetchedNotes.map((noteJson) => Note.fromJson(noteJson)).toList();
+          ongoingTasksCount = notes.length;
+        });
+      } catch (e) {
+        print("Error fetching notes: $e");
+      }
+    }
+  }
 
   Future<void> _logout() async {
     try {
@@ -46,7 +66,9 @@ class _DashboardState extends State<Dashboard> {
       if (context.mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MainView()), // Replace LoginPage with your login screen
+          MaterialPageRoute(
+              builder: (context) =>
+                  const MainView()), // Replace LoginPage with your login screen
         );
       }
     } catch (e) {
@@ -54,15 +76,19 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
-   List<Note> get ongoingNotes {
-    return notes.where((note) => note.tasks.any((task) => task.status == TaskStatus.ongoing)).toList();
+  List<Note> get ongoingNotes {
+    return notes
+        .where((note) => note.tasks.any((task) => task.isFinished == false))
+        .toList();
   }
 
   List<Note> get completedNotes {
-    return notes.where((note) => note.tasks.any((task) => task.status == TaskStatus.completed)).toList();
+    return notes
+        .where((note) => note.tasks.any((task) => task.isFinished == true))
+        .toList();
   }
-  
- @override
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -85,7 +111,7 @@ class _DashboardState extends State<Dashboard> {
                               children: [
                                 if (widget.user.nickname != null)
                                   Text(
-                                    'Hi ${widget.user.nickname!}', 
+                                    'Hi ${widget.user.nickname!}',
                                     style: title,
                                   ),
                                 Text(
@@ -113,7 +139,15 @@ class _DashboardState extends State<Dashboard> {
                         ),
                         SizedBox(height: 20),
                         ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    DetailNote(user: widget.user),
+                              ),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
                             foregroundColor: Colors.white,
@@ -136,22 +170,15 @@ class _DashboardState extends State<Dashboard> {
                         ),
                         SizedBox(height: 30),
                         Text(
-                          'Ongoing Tasks',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          'Ongoing Task',
+                          style: title,
                         ),
                         SizedBox(height: 20),
                         ongoingNotes.isNotEmpty
                             ? Column(
                                 children: ongoingNotes.map((note) {
                                   return _NoteCard(
-                                    title: note.title,
-                                    description: note.description,
-                                    date: note.date,
-                                    color: Colors.blue[50]!,
-                                    icon: note.icon,
+                                    note: note,
                                   );
                                 }).toList(),
                               )
@@ -169,11 +196,7 @@ class _DashboardState extends State<Dashboard> {
                             ? Column(
                                 children: completedNotes.take(5).map((note) {
                                   return _NoteCard(
-                                    title: note.title,
-                                    description: note.description,
-                                    date: note.date,
-                                    color: Colors.green[50]!,
-                                    icon: note.icon,
+                                    note: note,
                                   );
                                 }).toList(),
                               )
@@ -188,27 +211,35 @@ class _DashboardState extends State<Dashboard> {
           },
         ),
       ),
-       bottomNavigationBar: BottomNavBarWidget(
-      currentIndex: _selectedIndex,
-      onItemTapped: _onItemTapped,
-    ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        backgroundColor: Colors.white,
+        selectedItemColor: primaryColor,
+        unselectedItemColor: Colors.grey,
+        selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal),
+        type: BottomNavigationBarType.fixed,
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.task_rounded),
+            label: 'Completed Tasks',
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _NoteCard extends StatelessWidget {
-  final String title;
-  final String description;
-  final String date;
-  final Color color;
-  final IconData icon;
+  final Note note;
 
   const _NoteCard({
-    required this.title,
-    required this.description,
-    required this.date,
-    required this.color,
-    required this.icon
+    required this.note,
   });
 
   @override
@@ -216,13 +247,15 @@ class _NoteCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color,
+        color: note.isComplete
+            ? Colors.green[50]!
+            : Colors.blue[50]!, // Color based on task completion
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
-       children: [
+        children: [
           Icon(
-            icon, 
+            Icons.note,
             size: 60,
           ),
           SizedBox(width: 15),
@@ -231,7 +264,7 @@ class _NoteCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  note.title,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -239,7 +272,7 @@ class _NoteCard extends StatelessWidget {
                 ),
                 SizedBox(height: 5),
                 Text(
-                  description,
+                  note.content,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -247,10 +280,18 @@ class _NoteCard extends StatelessWidget {
                 ),
                 SizedBox(height: 5),
                 Text(
-                  date,
+                  note.updatedAt,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[400],
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  '${note.tasks.where((task) => task.isFinished).length} / ${note.tasks.length} tasks completed',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
                   ),
                 ),
               ],

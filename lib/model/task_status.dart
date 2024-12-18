@@ -1,4 +1,0 @@
-enum TaskStatus {
-  ongoing,
-  completed,
-}
