@@ -359,7 +359,6 @@ class _DetailNoteState extends State<DetailNote> {
                                           if (taskController.text.isNotEmpty) {
                                             tasks.add(Task(
                                               description: taskController.text,
-                                              status: TaskStatus.ongoing,
                                               isCompleted: false,
                                             ));
                                           }

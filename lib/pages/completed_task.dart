@@ -2,8 +2,8 @@ part of 'pages.dart';
 
 class CompletedTask extends StatefulWidget {
   final String userId;
-
-  const CompletedTask({super.key, required this.userId});
+  final List<Note> notes;
+  const CompletedTask({super.key, required this.userId, required this.notes});
 
   @override
   State<CompletedTask> createState() => _CompletedTaskState();
@@ -18,7 +18,7 @@ class _CompletedTaskState extends State<CompletedTask> {
   @override
   void initState() {
     super.initState();
-    _fetchCompletedTasks(); 
+    _fetchCompletedTasks();
   }
 
   void _fetchCompletedTasks() {
@@ -34,9 +34,9 @@ class _CompletedTaskState extends State<CompletedTask> {
   }
 
   List<Task> _getTasksForDay(DateTime day) {
-    // Filter 
+    // Filter
     final notesForDay = widget.notes
-        .where((note) => isSameDay(note.date, day))
+        .where((note) => isSameDay(DateTime.parse(note.date), day))
         .toList();
 
     final tasksForDay = <Task>[];
@@ -83,7 +83,8 @@ class _CompletedTaskState extends State<CompletedTask> {
                       firstDay: DateTime.utc(2000, 1, 1),
                       lastDay: DateTime.utc(2100, 12, 31),
                       focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
                       onDaySelected: (selectedDay, focusedDay) {
                         setState(() {
                           _selectedDay = selectedDay;
@@ -135,7 +136,8 @@ class _CompletedTaskState extends State<CompletedTask> {
                     style: title,
                   ),
                   SizedBox(height: 8),
-                  if (_selectedDay != null && tasksForSelectedDay.isNotEmpty) ...[
+                  if (_selectedDay != null &&
+                      tasksForSelectedDay.isNotEmpty) ...[
                     ...tasksForSelectedDay.map((task) => ListTile(
                           leading:
                               Icon(Icons.check_circle, color: primaryColor),
