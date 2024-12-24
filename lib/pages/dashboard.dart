@@ -19,6 +19,10 @@ class _DashboardState extends State<Dashboard> {
     super.initState();
     auth0 = Auth0('dev-kyls15gex83xgz5e.us.auth0.com',
         'DQBYRNAseJL4FpWriBhUrlqU54HumA0l');
+
+    // TODO: CHANGE USER ID BY AUTH0 ID
+    dashboardViewModel.getUserNotes("USER_001 ");
+    super.initState();
   }
 
   Future<void> _logout() async {
@@ -46,13 +50,31 @@ class _DashboardState extends State<Dashboard> {
   }
 
   List<Note> get ongoingNotes {
-    return dashboardViewModel.notes
+    // if (dashboardViewModel.notes.status != Status.completed) {
+    //   return [];
+    // }
+
+    // if (dashboardViewModel.notes.status == Status.completed &&
+    //     dashboardViewModel.notes.data == []) {
+    //   return [];
+    // }
+
+    return dashboardViewModel.notes.data!
         .where((note) => note.isCompleted == false)
         .toList();
   }
 
   List<Note> get completedNotes {
-    return dashboardViewModel.notes
+    // if (dashboardViewModel.notes.status != Status.completed) {
+    //   return [];
+    // }
+
+    // if (dashboardViewModel.notes.status == Status.completed &&
+    //     dashboardViewModel.notes.data == []) {
+    //   return [];
+    // }
+
+    return dashboardViewModel.notes.data!
         .where((note) => note.isCompleted == true)
         .toList();
   }
@@ -142,11 +164,11 @@ class _DashboardState extends State<Dashboard> {
                             ? Column(
                                 children: ongoingNotes.map((note) {
                                   return _NoteCard(
-                                    title: note.title,
-                                    description: note.description,
-                                    date: note.date,
+                                    title: note.title!,
+                                    description: note.content!,
+                                    date: note.updatedAt!,
                                     color: Colors.blue[50]!,
-                                    icon: note.icon,
+                                    icon: note.getIcon,
                                   );
                                 }).toList(),
                               )
@@ -164,11 +186,11 @@ class _DashboardState extends State<Dashboard> {
                             ? Column(
                                 children: completedNotes.take(5).map((note) {
                                   return _NoteCard(
-                                    title: note.title,
-                                    description: note.description,
-                                    date: note.date,
+                                    title: note.title!,
+                                    description: note.content!,
+                                    date: note.updatedAt!,
                                     color: Colors.green[50]!,
-                                    icon: note.icon,
+                                    icon: note.getIcon,
                                   );
                                 }).toList(),
                               )

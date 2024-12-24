@@ -36,7 +36,7 @@ class _CompletedTaskState extends State<CompletedTask> {
   List<Task> _getTasksForDay(DateTime day) {
     // Filter
     final notesForDay = widget.notes
-        .where((note) => isSameDay(DateTime.parse(note.date), day))
+        .where((note) => isSameDay(DateTime.parse(note.updatedAt!), day))
         .toList();
 
     final tasksForDay = <Task>[];

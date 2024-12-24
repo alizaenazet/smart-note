@@ -358,7 +358,7 @@ class _DetailNoteState extends State<DetailNote> {
                                         setState(() {
                                           if (taskController.text.isNotEmpty) {
                                             tasks.add(Task(
-                                              description: taskController.text,
+                                              todo: taskController.text,
                                               isCompleted: false,
                                             ));
                                           }
@@ -411,7 +411,7 @@ class _DetailNoteState extends State<DetailNote> {
                             children: [
                               IconButton(
                                 icon: Icon(
-                                  tasks[index].isCompleted
+                                  tasks[index].isCompleted!
                                       ? Icons.check_circle
                                       : Icons.circle_outlined,
                                   color: primaryColor,
@@ -419,9 +419,9 @@ class _DetailNoteState extends State<DetailNote> {
                                 onPressed: () {
                                   setState(() {
                                     tasks[index].isCompleted =
-                                        !tasks[index].isCompleted;
-                                    if (tasks
-                                        .every((task) => task.isCompleted)) {
+                                        !(tasks[index].isCompleted ?? false);
+                                    if (tasks.every((task) =>
+                                        (task.isCompleted ?? false))) {
                                       _selectedStatus = 'Completed';
                                     } else {
                                       _selectedStatus = 'Ongoing';
@@ -431,7 +431,7 @@ class _DetailNoteState extends State<DetailNote> {
                               ),
                               Expanded(
                                 child: Text(
-                                  tasks[index].description,
+                                  tasks[index].todo!,
                                   style: TextStyle(fontSize: 16),
                                 ),
                               ),
@@ -443,7 +443,7 @@ class _DetailNoteState extends State<DetailNote> {
                                       builder: (BuildContext context) {
                                         TextEditingController editController =
                                             TextEditingController(
-                                                text: tasks[index].description);
+                                                text: tasks[index].todo);
                                         return AlertDialog(
                                           title: Text('Edit Task'),
                                           content: TextField(
@@ -461,10 +461,8 @@ class _DetailNoteState extends State<DetailNote> {
                                             ),
                                             TextButton(
                                               onPressed: () {
-                                                setState(() {
-                                                  tasks[index].description =
-                                                      editController.text;
-                                                });
+                                                // TODO: CALL API TO EDIT TASK
+
                                                 Navigator.pop(context);
                                               },
                                               child: Text('Save'),
