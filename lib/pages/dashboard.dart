@@ -11,42 +11,31 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   int ongoingTasksCount = 0;
-  List<Note> notes = [];
-  Credentials? _credentials;
-  int _selectedIndex = 0; 
-  late final List<Widget> _pages;
-
+  int _selectedIndex = 0;
   late Auth0 auth0;
-
+  DashboardViewModel dashboardViewModel = DashboardViewModel();
   @override
   void initState() {
     super.initState();
-    auth0 = Auth0('dev-kyls15gex83xgz5e.us.auth0.com', 'DQBYRNAseJL4FpWriBhUrlqU54HumA0l');
-     _pages = [
-      Dashboard(user: widget.user), 
-      CompletedTask(userId: '')
-    ];
+    auth0 = Auth0('dev-kyls15gex83xgz5e.us.auth0.com',
+        'DQBYRNAseJL4FpWriBhUrlqU54HumA0l');
+
+    // TODO: CHANGE USER ID BY AUTH0 ID
+    dashboardViewModel.getUserNotes("USER_001 ");
+    super.initState();
   }
-  
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-  
 
   Future<void> _logout() async {
     try {
       await auth0.webAuthentication(scheme: 'smartnote').logout(useHTTPS: true);
-      setState(() {
-        _credentials = null;
-      });
 
       // Navigate to the login or welcome screen
       if (context.mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MainView()), // Replace LoginPage with your login screen
+          MaterialPageRoute(
+              builder: (context) =>
+                  const MainView()), // Replace LoginPage with your login screen
         );
       }
     } catch (e) {
@@ -54,15 +43,43 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
-   List<Note> get ongoingNotes {
-    return notes.where((note) => note.tasks.any((task) => task.status == TaskStatus.ongoing)).toList();
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  List<Note> get ongoingNotes {
+    // if (dashboardViewModel.notes.status != Status.completed) {
+    //   return [];
+    // }
+
+    // if (dashboardViewModel.notes.status == Status.completed &&
+    //     dashboardViewModel.notes.data == []) {
+    //   return [];
+    // }
+
+    return dashboardViewModel.notes.data!
+        .where((note) => note.isCompleted == false)
+        .toList();
   }
 
   List<Note> get completedNotes {
-    return notes.where((note) => note.tasks.any((task) => task.status == TaskStatus.completed)).toList();
+    // if (dashboardViewModel.notes.status != Status.completed) {
+    //   return [];
+    // }
+
+    // if (dashboardViewModel.notes.status == Status.completed &&
+    //     dashboardViewModel.notes.data == []) {
+    //   return [];
+    // }
+
+    return dashboardViewModel.notes.data!
+        .where((note) => note.isCompleted == true)
+        .toList();
   }
-  
- @override
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -85,7 +102,7 @@ class _DashboardState extends State<Dashboard> {
                               children: [
                                 if (widget.user.nickname != null)
                                   Text(
-                                    'Hi ${widget.user.nickname!}', 
+                                    'Hi ${widget.user.nickname!}',
                                     style: title,
                                   ),
                                 Text(
@@ -125,33 +142,33 @@ class _DashboardState extends State<Dashboard> {
                               borderRadius: BorderRadius.circular(30),
                             ),
                           ),
-                          icon: ImageIcon(
+                          icon: const ImageIcon(
                             AssetImage('assets/images/Create.png'),
                             size: 35,
                           ),
-                          label: Text(
+                          label: const Text(
                             'Create Note',
                             style: TextStyle(fontSize: 20),
                           ),
                         ),
-                        SizedBox(height: 30),
-                        Text(
+                        const SizedBox(height: 30),
+                        const Text(
                           'Ongoing Tasks',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         ongoingNotes.isNotEmpty
                             ? Column(
                                 children: ongoingNotes.map((note) {
                                   return _NoteCard(
-                                    title: note.title,
-                                    description: note.description,
-                                    date: note.date,
+                                    title: note.title!,
+                                    description: note.content!,
+                                    date: note.updatedAt!,
                                     color: Colors.blue[50]!,
-                                    icon: note.icon,
+                                    icon: note.getIcon,
                                   );
                                 }).toList(),
                               )
@@ -169,11 +186,11 @@ class _DashboardState extends State<Dashboard> {
                             ? Column(
                                 children: completedNotes.take(5).map((note) {
                                   return _NoteCard(
-                                    title: note.title,
-                                    description: note.description,
-                                    date: note.date,
+                                    title: note.title!,
+                                    description: note.content!,
+                                    date: note.updatedAt!,
                                     color: Colors.green[50]!,
-                                    icon: note.icon,
+                                    icon: note.getIcon,
                                   );
                                 }).toList(),
                               )
@@ -188,10 +205,10 @@ class _DashboardState extends State<Dashboard> {
           },
         ),
       ),
-       bottomNavigationBar: BottomNavBarWidget(
-      currentIndex: _selectedIndex,
-      onItemTapped: _onItemTapped,
-    ),
+      bottomNavigationBar: BottomNavBarWidget(
+        currentIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
+      ),
     );
   }
 }
@@ -203,13 +220,12 @@ class _NoteCard extends StatelessWidget {
   final Color color;
   final IconData icon;
 
-  const _NoteCard({
-    required this.title,
-    required this.description,
-    required this.date,
-    required this.color,
-    required this.icon
-  });
+  const _NoteCard(
+      {required this.title,
+      required this.description,
+      required this.date,
+      required this.color,
+      required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -220,9 +236,9 @@ class _NoteCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
-       children: [
+        children: [
           Icon(
-            icon, 
+            icon,
             size: 60,
           ),
           SizedBox(width: 15),
