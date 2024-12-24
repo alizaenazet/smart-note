@@ -1,17 +1,33 @@
 part of 'pages.dart';
 
 class DetailNote extends StatefulWidget {
-  const DetailNote({super.key});
+  final Note note;
+  const DetailNote({super.key, required this.note});
 
   @override
-  State<DetailNote> createState() => _DetailNoteState();
+  State<DetailNote> createState() => _DetailNoteState(note: note);
 }
 
 class _DetailNoteState extends State<DetailNote> {
+  final Note note;
+  _DetailNoteState({required this.note});
+
+  DetailNoteViewModel detailNoteViewModel = DetailNoteViewModel();
+
   final TextEditingController _notesController = TextEditingController();
   List<Task> tasks = [];
-  String _selectedStatus = 'Ongoing';
+  late String _selectedStatus;
   String _selectedIcon = 'Gardening';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedStatus = note.isComplete! ? 'Completed' : 'Ongoing';
+    if (note.todoList == null) {
+      note.todoList = [];
+    }
+    detailNoteViewModel.setNote(note);
+  }
 
   final List<Map<String, dynamic>> iconCategories = [
     {'name': 'Gardening', 'icon': Icons.local_florist},
@@ -25,12 +41,6 @@ class _DetailNoteState extends State<DetailNote> {
     {'name': 'Finance', 'icon': Icons.attach_money},
     {'name': 'Other', 'icon': Icons.more_horiz},
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    // _fetchNotes();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +70,7 @@ class _DetailNoteState extends State<DetailNote> {
                         color: Colors.white,
                       ),
                     ),
-                    Text('Gardening', style: title),
+                    Text(detailNoteViewModel.note.title!, style: title),
                     ElevatedButton(
                       onPressed: () async {
                         bool? confirm = await showDialog(
@@ -256,7 +266,10 @@ class _DetailNoteState extends State<DetailNote> {
                             borderRadius: BorderRadius.circular(25),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          detailNoteViewModel.updateNote(note.title!,
+                              _notesController.text, _selectedIcon);
+                        },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -282,7 +295,10 @@ class _DetailNoteState extends State<DetailNote> {
                             borderRadius: BorderRadius.circular(25),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          // TODO: CALL API TO GENERATE TODO LIST
+                          detailNoteViewModel.generateTasks();
+                        },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -391,7 +407,7 @@ class _DetailNoteState extends State<DetailNote> {
                     ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
-                      itemCount: tasks.length,
+                      itemCount: detailNoteViewModel.note.todoList!.length,
                       itemBuilder: (context, index) {
                         return Container(
                           margin: EdgeInsets.only(bottom: 8),
@@ -411,15 +427,20 @@ class _DetailNoteState extends State<DetailNote> {
                             children: [
                               IconButton(
                                 icon: Icon(
-                                  tasks[index].isCompleted!
+                                  detailNoteViewModel
+                                          .note.todoList![index].isCompleted!
                                       ? Icons.check_circle
                                       : Icons.circle_outlined,
                                   color: primaryColor,
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    tasks[index].isCompleted =
-                                        !(tasks[index].isCompleted ?? false);
+                                    detailNoteViewModel.note.todoList![index]
+                                        .isCompleted = !(detailNoteViewModel
+                                            .note
+                                            .todoList![index]
+                                            .isCompleted ??
+                                        false);
                                     if (tasks.every((task) =>
                                         (task.isCompleted ?? false))) {
                                       _selectedStatus = 'Completed';
@@ -431,7 +452,8 @@ class _DetailNoteState extends State<DetailNote> {
                               ),
                               Expanded(
                                 child: Text(
-                                  tasks[index].todo!,
+                                  detailNoteViewModel
+                                      .note.todoList![index].todo!,
                                   style: TextStyle(fontSize: 16),
                                 ),
                               ),
@@ -443,7 +465,8 @@ class _DetailNoteState extends State<DetailNote> {
                                       builder: (BuildContext context) {
                                         TextEditingController editController =
                                             TextEditingController(
-                                                text: tasks[index].todo);
+                                                text: detailNoteViewModel.note
+                                                    .todoList![index].todo);
                                         return AlertDialog(
                                           title: Text('Edit Task'),
                                           content: TextField(

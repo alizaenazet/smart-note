@@ -16,14 +16,19 @@ class NetworkApiServices implements BaseApiServices {
   }
 
   @override
-  Future<http.Response> getApiResponse(String endpoint,
+  Future getApiResponse(String endpoint,
       {Map<String, dynamic>? queryParams}) async {
     try {
+      print("\n\n🛜🛜🛜\nNETWORK API SERVICE CALLED");
+      print(Const.smartNoteBaseUrl);
       final queryParamsWithKey = {
         ...?queryParams,
       };
-      final uri =
-          Uri.https(Const.smartNoteBaseUrl, endpoint, queryParamsWithKey);
+      debugPrint(
+          "\n\n🛜🛜🛜\nENDPOINT: $endpoint $queryParams"); // Executed fine
+      final uri = Uri.https(
+          Const.smartNoteBaseUrl, endpoint, queryParamsWithKey); // NOT WORKING
+      print("\n\n🛜🛜🛜\nURI: $uri");
       final response = await http.get(
         uri,
         headers: <String, String>{
@@ -36,6 +41,9 @@ class NetworkApiServices implements BaseApiServices {
       throw NoInternetException('');
     } on TimeoutException {
       throw FetchDataException('Api not responding');
+    } catch (e) {
+      print("\n\n🛜🛜🛜\nERROR: $e");
+      throw FetchDataException(e.toString());
     }
   }
 
