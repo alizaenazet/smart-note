@@ -1,17 +1,30 @@
 part of 'pages.dart';
 
 class DetailNote extends StatefulWidget {
-  const DetailNote({super.key});
+  final Note note;
+  const DetailNote({super.key, required this.note});
 
   @override
-  State<DetailNote> createState() => _DetailNoteState();
+  State<DetailNote> createState() => _DetailNoteState(note: note);
 }
 
 class _DetailNoteState extends State<DetailNote> {
+  final Note note;
+  _DetailNoteState({required this.note});
+
+  DetailNoteViewModel detailNoteViewModel = DetailNoteViewModel();
+
   final TextEditingController _notesController = TextEditingController();
   List<Task> tasks = [];
-  String _selectedStatus = 'Ongoing';
+  late String _selectedStatus;
   String _selectedIcon = 'Gardening';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedStatus = note.isComplete! ? 'Completed' : 'Ongoing';
+    detailNoteViewModel.setNote(note);
+  }
 
   final List<Map<String, dynamic>> iconCategories = [
     {'name': 'Gardening', 'icon': Icons.local_florist},
@@ -25,12 +38,6 @@ class _DetailNoteState extends State<DetailNote> {
     {'name': 'Finance', 'icon': Icons.attach_money},
     {'name': 'Other', 'icon': Icons.more_horiz},
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    // _fetchNotes();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +67,7 @@ class _DetailNoteState extends State<DetailNote> {
                         color: Colors.white,
                       ),
                     ),
-                    Text('Gardening', style: title),
+                    Text(detailNoteViewModel.note.title!, style: title),
                     ElevatedButton(
                       onPressed: () async {
                         bool? confirm = await showDialog(
@@ -256,7 +263,10 @@ class _DetailNoteState extends State<DetailNote> {
                             borderRadius: BorderRadius.circular(25),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          detailNoteViewModel.updateNote(note.title!,
+                              _notesController.text, _selectedIcon);
+                        },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -282,7 +292,9 @@ class _DetailNoteState extends State<DetailNote> {
                             borderRadius: BorderRadius.circular(25),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          // TODO: CALL API TO GENERATE TODO LIST
+                        },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

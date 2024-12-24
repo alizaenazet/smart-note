@@ -1,4 +1,5 @@
 part of 'pages.dart';
+// Adjust the path as necessary
 
 class Dashboard extends StatefulWidget {
   const Dashboard({Key? key, required this.user}) : super(key: key);
@@ -50,14 +51,14 @@ class _DashboardState extends State<Dashboard> {
   }
 
   List<Note> get ongoingNotes {
-    // if (dashboardViewModel.notes.status != Status.completed) {
-    //   return [];
-    // }
+    if (dashboardViewModel.notes.status != Status.completed) {
+      return [];
+    }
 
-    // if (dashboardViewModel.notes.status == Status.completed &&
-    //     dashboardViewModel.notes.data == []) {
-    //   return [];
-    // }
+    if (dashboardViewModel.notes.status == Status.completed &&
+        dashboardViewModel.notes.data == []) {
+      return [];
+    }
 
     return dashboardViewModel.notes.data!
         .where((note) => note.isCompleted == false)
@@ -65,14 +66,14 @@ class _DashboardState extends State<Dashboard> {
   }
 
   List<Note> get completedNotes {
-    // if (dashboardViewModel.notes.status != Status.completed) {
-    //   return [];
-    // }
+    if (dashboardViewModel.notes.status != Status.completed) {
+      return [];
+    }
 
-    // if (dashboardViewModel.notes.status == Status.completed &&
-    //     dashboardViewModel.notes.data == []) {
-    //   return [];
-    // }
+    if (dashboardViewModel.notes.status == Status.completed &&
+        dashboardViewModel.notes.data == []) {
+      return [];
+    }
 
     return dashboardViewModel.notes.data!
         .where((note) => note.isCompleted == true)
@@ -160,19 +161,17 @@ class _DashboardState extends State<Dashboard> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        ongoingNotes.isNotEmpty
-                            ? Column(
-                                children: ongoingNotes.map((note) {
-                                  return _NoteCard(
-                                    title: note.title!,
-                                    description: note.content!,
-                                    date: note.updatedAt!,
-                                    color: Colors.blue[50]!,
-                                    icon: note.getIcon,
-                                  );
-                                }).toList(),
-                              )
-                            : Center(child: Text('No ongoing tasks')),
+                        dashboardViewModel.notes.status != Status.completed
+                            ? Center(child: CircularProgressIndicator())
+                            : ongoingNotes.isNotEmpty
+                                ? Column(
+                                    children: ongoingNotes.map((note) {
+                                      return _NoteCard(
+                                        note: note,
+                                      );
+                                    }).toList(),
+                                  )
+                                : Center(child: Text('No ongoing tasks')),
                         SizedBox(height: 30),
                         Text(
                           'Completed Tasks',
@@ -182,19 +181,17 @@ class _DashboardState extends State<Dashboard> {
                           ),
                         ),
                         SizedBox(height: 20),
-                        completedNotes.isNotEmpty
-                            ? Column(
-                                children: completedNotes.take(5).map((note) {
-                                  return _NoteCard(
-                                    title: note.title!,
-                                    description: note.content!,
-                                    date: note.updatedAt!,
-                                    color: Colors.green[50]!,
-                                    icon: note.getIcon,
-                                  );
-                                }).toList(),
-                              )
-                            : Center(child: Text('No completed tasks')),
+                        dashboardViewModel.notes.status != Status.completed
+                            ? Center(child: CircularProgressIndicator())
+                            : ongoingNotes.isNotEmpty
+                                ? Column(
+                                    children: completedNotes.map((note) {
+                                      return _NoteCard(
+                                        note: note,
+                                      );
+                                    }).toList(),
+                                  )
+                                : Center(child: Text('No ongoing tasks')),
                         Spacer(),
                       ],
                     ),
@@ -214,65 +211,68 @@ class _DashboardState extends State<Dashboard> {
 }
 
 class _NoteCard extends StatelessWidget {
-  final String title;
-  final String description;
-  final String date;
-  final Color color;
-  final IconData icon;
+  final Note note;
 
-  const _NoteCard(
-      {required this.title,
-      required this.description,
-      required this.date,
-      required this.color,
-      required this.icon});
+  const _NoteCard({required this.note});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 60,
-          ),
-          SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  date,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[400],
-                  ),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailNote(
+              note: note,
             ),
           ),
-        ],
+        );
+      },
+      child: Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.blue[50]!,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              note.getIcon,
+              size: 60,
+            ),
+            SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    note.title!,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    note.content!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    note.updatedAt!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

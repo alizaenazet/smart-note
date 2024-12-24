@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:smart_note/model/task.dart';
 
 class Note extends Equatable {
-  final String? id;
-  final String? title;
-  final String? content;
-  final String? updatedAt;
-  final String? icon;
-  final bool? isComplete;
-  final List<Task>? todoList;
+  String? id;
+  String? title;
+  String? content;
+  String? updatedAt;
+  String? icon;
+  bool? isComplete;
+  List<Task>? todoList;
 
-  const Note({
+  Note({
     this.id,
     this.title,
     this.content,
@@ -74,12 +74,22 @@ class Note extends Equatable {
     switch (icon) {
       case 'work':
         return Icons.work;
+      case 'gardening':
+        return Icons.local_florist;
+      case 'sports':
+        return Icons.sports_soccer;
+      case 'cooking':
+        return Icons.restaurant;
       case 'study':
-        return Icons.menu_book;
-      case 'home':
-        return Icons.home;
-      case 'others':
-        return Icons.category;
+        return Icons.school;
+      case 'travel':
+        return Icons.flight;
+      case 'shopping':
+        return Icons.shopping_cart;
+      case 'health':
+        return Icons.favorite;
+      case 'finance':
+        return Icons.attach_money;
       default:
         return Icons.note_alt_outlined;
     }
