@@ -4,7 +4,6 @@ import 'package:smart_note/pages/pages.dart';
 import 'package:smart_note/shared/theme_shared.dart';
 
 void main() {
-  // await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 

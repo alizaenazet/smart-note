@@ -23,6 +23,9 @@ class _DetailNoteState extends State<DetailNote> {
   void initState() {
     super.initState();
     _selectedStatus = note.isComplete! ? 'Completed' : 'Ongoing';
+    if (note.todoList == null) {
+      note.todoList = [];
+    }
     detailNoteViewModel.setNote(note);
   }
 
@@ -294,6 +297,7 @@ class _DetailNoteState extends State<DetailNote> {
                         ),
                         onPressed: () {
                           // TODO: CALL API TO GENERATE TODO LIST
+                          detailNoteViewModel.generateTasks();
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -403,7 +407,7 @@ class _DetailNoteState extends State<DetailNote> {
                     ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
-                      itemCount: tasks.length,
+                      itemCount: detailNoteViewModel.note.todoList!.length,
                       itemBuilder: (context, index) {
                         return Container(
                           margin: EdgeInsets.only(bottom: 8),
@@ -423,15 +427,20 @@ class _DetailNoteState extends State<DetailNote> {
                             children: [
                               IconButton(
                                 icon: Icon(
-                                  tasks[index].isCompleted!
+                                  detailNoteViewModel
+                                          .note.todoList![index].isCompleted!
                                       ? Icons.check_circle
                                       : Icons.circle_outlined,
                                   color: primaryColor,
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    tasks[index].isCompleted =
-                                        !(tasks[index].isCompleted ?? false);
+                                    detailNoteViewModel.note.todoList![index]
+                                        .isCompleted = !(detailNoteViewModel
+                                            .note
+                                            .todoList![index]
+                                            .isCompleted ??
+                                        false);
                                     if (tasks.every((task) =>
                                         (task.isCompleted ?? false))) {
                                       _selectedStatus = 'Completed';
@@ -443,7 +452,8 @@ class _DetailNoteState extends State<DetailNote> {
                               ),
                               Expanded(
                                 child: Text(
-                                  tasks[index].todo!,
+                                  detailNoteViewModel
+                                      .note.todoList![index].todo!,
                                   style: TextStyle(fontSize: 16),
                                 ),
                               ),
@@ -455,7 +465,8 @@ class _DetailNoteState extends State<DetailNote> {
                                       builder: (BuildContext context) {
                                         TextEditingController editController =
                                             TextEditingController(
-                                                text: tasks[index].todo);
+                                                text: detailNoteViewModel.note
+                                                    .todoList![index].todo);
                                         return AlertDialog(
                                           title: Text('Edit Task'),
                                           content: TextField(
