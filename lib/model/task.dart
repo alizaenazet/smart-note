@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 
 class Task extends Equatable {
   final int? id;
-  final String? todo;
+  String? todo;
   bool? isCompleted;
 
   Task({this.id, this.todo, this.isCompleted});
