@@ -1,4 +1,5 @@
 part of 'pages.dart';
+
 // Adjust the path as necessary
 
 class Dashboard extends StatefulWidget {
@@ -15,6 +16,7 @@ class _DashboardState extends State<Dashboard> {
   int _selectedIndex = 0;
   late Auth0 auth0;
   DashboardViewModel dashboardViewModel = DashboardViewModel();
+
   @override
   void initState() {
     super.initState();
@@ -91,7 +93,7 @@ class _DashboardState extends State<Dashboard> {
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
-                    padding: EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.all(20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -113,15 +115,13 @@ class _DashboardState extends State<Dashboard> {
                               ],
                             ),
                             ElevatedButton(
-                              onPressed: () {
-                                _logout();
-                              },
+                              onPressed: _logout,
                               style: ElevatedButton.styleFrom(
                                 shape: const CircleBorder(),
                                 padding: const EdgeInsets.all(8),
                                 backgroundColor: primaryColor,
                               ),
-                              child: ImageIcon(
+                              child: const ImageIcon(
                                 AssetImage('assets/images/Logout.png'),
                                 size: 35,
                                 color: Colors.white,
@@ -129,13 +129,43 @@ class _DashboardState extends State<Dashboard> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () async {
+                             try {
+                              // Call API to create a new note
+                              var response = await NetworkApiServices().postApiResponse(
+                                '/notes',
+                                {
+                                  'title': 'New Note',
+                                  'content': '',
+                                  'isCompleted': false,
+                                },
+                              );
+                              Note newNote = Note.fromJson(response);
+
+                              if (mounted) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DetailNote(
+                                      note: newNote,
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              // Handle error
+                              debugPrint('Failed to create note: $e');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Failed to create note. Please try again.')),
+                              );
+                            }
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
                             foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 12,
                             ),
@@ -162,7 +192,7 @@ class _DashboardState extends State<Dashboard> {
                         ),
                         const SizedBox(height: 20),
                         dashboardViewModel.notes.status != Status.completed
-                            ? Center(child: CircularProgressIndicator())
+                            ? const Center(child: CircularProgressIndicator())
                             : ongoingNotes.isNotEmpty
                                 ? Column(
                                     children: ongoingNotes.map((note) {
@@ -171,18 +201,18 @@ class _DashboardState extends State<Dashboard> {
                                       );
                                     }).toList(),
                                   )
-                                : Center(child: Text('No ongoing tasks')),
-                        SizedBox(height: 30),
-                        Text(
+                                : const Center(child: Text('No ongoing tasks')),
+                        const SizedBox(height: 30),
+                        const Text(
                           'Completed Tasks',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         dashboardViewModel.notes.status != Status.completed
-                            ? Center(child: CircularProgressIndicator())
+                            ? const Center(child: CircularProgressIndicator())
                             : ongoingNotes.isNotEmpty
                                 ? Column(
                                     children: completedNotes.map((note) {
@@ -191,8 +221,8 @@ class _DashboardState extends State<Dashboard> {
                                       );
                                     }).toList(),
                                   )
-                                : Center(child: Text('No ongoing tasks')),
-                        Spacer(),
+                                : const Center(child: Text('No ongoing tasks')),
+                        const Spacer(),
                       ],
                     ),
                   ),
@@ -202,9 +232,11 @@ class _DashboardState extends State<Dashboard> {
           },
         ),
       ),
-      bottomNavigationBar: BottomNavBarWidget(
+       bottomNavigationBar: BottomNavBarWidget(
         currentIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
+        user: widget.user,
+        notes: dashboardViewModel.notes.data ?? [],
       ),
     );
   }
@@ -229,7 +261,7 @@ class _NoteCard extends StatelessWidget {
         );
       },
       child: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.blue[50]!,
           borderRadius: BorderRadius.circular(20),
@@ -240,19 +272,19 @@ class _NoteCard extends StatelessWidget {
               note.getIcon,
               size: 60,
             ),
-            SizedBox(width: 15),
+            const SizedBox(width: 15),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     note.title!,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     note.content!,
                     style: TextStyle(
@@ -260,7 +292,7 @@ class _NoteCard extends StatelessWidget {
                       color: Colors.grey[600],
                     ),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     note.updatedAt!,
                     style: TextStyle(

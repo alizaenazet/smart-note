@@ -1,9 +1,9 @@
 part of 'pages.dart';
-
 class CompletedTask extends StatefulWidget {
-  final String userId;
+  final dynamic user;
   final List<Note> notes;
-  const CompletedTask({super.key, required this.userId, required this.notes});
+
+  const CompletedTask({super.key, required this.user, required this.notes});
 
   @override
   State<CompletedTask> createState() => _CompletedTaskState();
@@ -13,37 +13,67 @@ class _CompletedTaskState extends State<CompletedTask> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   List<Task> completedTasks = [];
-  bool isLoading = true;
+  bool isLoading = false;
+  int _selectedIndex = 1;
+  late DashboardViewModel dashboardViewModel;
 
   @override
   void initState() {
     super.initState();
+    dashboardViewModel = DashboardViewModel();
     _fetchCompletedTasks();
   }
 
-  void _fetchCompletedTasks() {
-    final List<Task> allCompletedTasks = [];
-    for (var note in widget.notes) {
-      allCompletedTasks.addAll(note.getCompletedTasks());
-    }
-
+  Future<void> _fetchCompletedTasks() async {
     setState(() {
-      completedTasks = allCompletedTasks;
-      isLoading = false;
+      isLoading = true;
     });
+
+    try {
+      await dashboardViewModel.getUserNotes("USER_001");
+      final notesData = dashboardViewModel.notes.data ?? [];
+      List<Task> allCompletedTasks = [];
+      for (var note in notesData) {
+        allCompletedTasks.addAll(note.getCompletedTasks());
+      }
+
+      setState(() {
+        completedTasks = allCompletedTasks;
+      });
+    } catch (e) {
+      print('Error fetching completed tasks: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   List<Task> _getTasksForDay(DateTime day) {
-    // Filter
-    final notesForDay = widget.notes
-        .where((note) => isSameDay(DateTime.parse(note.updatedAt!), day))
-        .toList();
-
-    final tasksForDay = <Task>[];
-    for (var note in notesForDay) {
-      tasksForDay.addAll(note.getCompletedTasks());
-    }
+    final tasksForDay = completedTasks.where((task) {
+      for (var note in widget.notes) {
+        if (note.todoList != null && note.todoList!.contains(task)) {
+          final noteUpdatedAt = DateTime.parse(note.updatedAt!);
+          return isSameDay(noteUpdatedAt, day);
+        }
+      }
+      return false;
+    }).toList();
     return tasksForDay;
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Dashboard(user: widget.user),
+        ),
+      );
+    }
   }
 
   @override
@@ -53,6 +83,7 @@ class _CompletedTaskState extends State<CompletedTask> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Center(
           child: Text(
             'Completed Tasks',
@@ -141,7 +172,7 @@ class _CompletedTaskState extends State<CompletedTask> {
                     ...tasksForSelectedDay.map((task) => ListTile(
                           leading:
                               Icon(Icons.check_circle, color: primaryColor),
-                          title: Text(task.description, style: content1),
+                          title: Text(task.todo ?? '', style: content1),
                         )),
                   ] else
                     Text(
@@ -151,6 +182,16 @@ class _CompletedTaskState extends State<CompletedTask> {
                 ],
               ),
             ),
+      bottomNavigationBar: BottomNavBarWidget(
+        currentIndex: _selectedIndex,
+        onItemTapped: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        user: widget.user,
+        notes: widget.notes,
+      ),
     );
   }
 
