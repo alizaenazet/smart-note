@@ -91,10 +91,35 @@ class NetworkApiServices implements BaseApiServices {
   }
 
   @override
-  Future putApiResponse(String url, data) {
-    // TODO: implement putApiResponse
-    throw UnimplementedError();
+  Future putApiResponse(String endpoint, dynamic data,
+      {Map<String, dynamic>? queryParams}) async {
+    try {
+      print("\n\n🛜🛜🛜\nPUT API SERVICE CALLED");
+      final queryParamsWithKey = {
+        ...?queryParams,
+      };
+      final uri =
+          Uri.https(Const.smartNoteBaseUrl, endpoint, queryParamsWithKey);
+    print("\n\n🛜🛜🛜\nPUT URI: $uri");
+    final response = await http.put(
+      uri,
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+      body: data != null ? jsonEncode(data) : null,
+    );
+    debugPrint('Response [$endpoint]: $response');
+    return returnResponse(response);
+  } on SocketException {
+    throw NoInternetException('No Internet Connection');
+  } on TimeoutException {
+    throw FetchDataException('API not responding');
+  } catch (e) {
+    print("\n\n🛜🛜🛜\nERROR: $e");
+    throw FetchDataException(e.toString());
   }
+  }
+
 
   dynamic returnResponse(http.Response response) {
     switch (response.statusCode) {
