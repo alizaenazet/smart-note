@@ -16,7 +16,7 @@ class _DetailNoteState extends State<DetailNote> {
 
   final TextEditingController _notesController = TextEditingController();
   List<Task> tasks = [];
-  late String _selectedStatus;
+  String _selectedStatus = 'Ongoing';
   String _selectedIcon = 'Gardening';
 
   @override
@@ -95,7 +95,27 @@ class _DetailNoteState extends State<DetailNote> {
                           },
                         );
                         if (confirm == true) {
-                          // _deleteNote(note);
+                          try {
+                            String noteId =
+                                "123"; // Ganti dengan ID catatan yang sesuai
+                            String deleteUrl =
+                                "https://84af8c7f-2942-44a6-b19b-c0293cf17cb4.mock.pstmn.io/notes/$noteId";
+
+                            await NetworkApiServices()
+                                .deleteApiResponse(deleteUrl);
+
+                            Navigator.of(context).pop();
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Note deleted successfully')),
+                            );
+                          } catch (e) {
+                            print('Error deleting note: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed to delete note')),
+                            );
+                          }
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -465,8 +485,10 @@ class _DetailNoteState extends State<DetailNote> {
                                       builder: (BuildContext context) {
                                         TextEditingController editController =
                                             TextEditingController(
-                                                text: detailNoteViewModel.note
-                                                    .todoList![index].todo);
+                                          text: detailNoteViewModel
+                                              .note.todoList![index].todo,
+                                        );
+
                                         return AlertDialog(
                                           title: Text('Edit Task'),
                                           content: TextField(
@@ -478,15 +500,15 @@ class _DetailNoteState extends State<DetailNote> {
                                           actions: [
                                             TextButton(
                                               onPressed: () {
-                                                Navigator.pop(context);
+                                                Navigator.pop(
+                                                    context); // Tutup dialog
                                               },
                                               child: Text('Cancel'),
                                             ),
                                             TextButton(
-                                              onPressed: () {
-                                                // TODO: CALL API TO EDIT TASK
-
-                                                Navigator.pop(context);
+                                              onPressed: () async {
+                                                detailNoteViewModel
+                                                    .updateTask();
                                               },
                                               child: Text('Save'),
                                             ),
@@ -549,14 +571,3 @@ class _DetailNoteState extends State<DetailNote> {
     super.dispose();
   }
 }
-
-//    factory Note.fromJson(Map<String, dynamic> json) {
-//     return Note(
-//       id: json['id'],
-//       noteId: json['note_id'] ?? '',
-//       title: json['text'],
-//       isCompleted: json['is_finished'],
-//       createdDate: DateTime.parse(json['createdDate'] ?? DateTime.now().toString()),
-//     );
-//   }
-// }

@@ -80,4 +80,7 @@ class DetailNoteViewModel with ChangeNotifier {
     ));
     notifyListeners();
   }
+
+   Future<void> updateTask() async {
+   }
 }
