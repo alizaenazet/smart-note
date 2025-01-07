@@ -10,9 +10,27 @@ import 'package:http/http.dart' as http;
 
 class NetworkApiServices implements BaseApiServices {
   @override
-  Future deleteApiResponse(String url) {
-    // TODO: implement deleteApiResponse
-    throw UnimplementedError();
+  Future deleteApiResponse(String endpoint) async {
+    try {
+      print("\n\n🛜🛜🛜\nDELETE API SERVICE CALLED");
+      final uri = Uri.https(Const.smartNoteBaseUrl, endpoint);
+      print("\n\n🛜🛜🛜\nDELETE URI: $uri");
+      final response = await http.delete(
+        uri,
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+        },
+      );
+      debugPrint('Response [$endpoint]: $response');
+      return returnResponse(response);
+    } on SocketException {
+      throw NoInternetException('No Internet Connection');
+    } on TimeoutException {
+      throw FetchDataException('Api not responding');
+    } catch (e) {
+      print("\n\n🛜🛜🛜\nERROR: $e");
+      throw FetchDataException(e.toString());
+    }
   }
 
   @override
