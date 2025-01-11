@@ -54,6 +54,7 @@ class _DetailNoteState extends State<DetailNote> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  
                   children: [
                     ElevatedButton(
                       onPressed: () {
@@ -70,7 +71,16 @@ class _DetailNoteState extends State<DetailNote> {
                         color: Colors.white,
                       ),
                     ),
-                    Text(detailNoteViewModel.note.title!, style: title),
+                    // Text(detailNoteViewModel.note.title!,
+                    //     style: title, overflow: TextOverflow.ellipsis),
+                    Flexible(
+                      child: Text(
+                        detailNoteViewModel.note.title!,
+                        style: title,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
                     ElevatedButton(
                       onPressed: () async {
                         bool? confirm = await showDialog(
