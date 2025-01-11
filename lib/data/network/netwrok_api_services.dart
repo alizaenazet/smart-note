@@ -77,6 +77,7 @@ class NetworkApiServices implements BaseApiServices {
 
       // Debug print to verify the request
       debugPrint('Request URL: $uri');
+      debugPrint("data: $data");
       debugPrint('Request Body: ${jsonEncode(data)}');
 
       final response = await http.post(
@@ -86,11 +87,13 @@ class NetworkApiServices implements BaseApiServices {
         },
         body: data != null ? jsonEncode(data) : null,
       );
-      debugPrint('Response [$endpoint]: $response');
+      // debugPrint('Response [$endpoint]: $response');
 
       // Debugging the raw response
-    debugPrint('Response Status: ${response.statusCode}');
-    debugPrint('Response Body: ${response.body}');
+      debugPrint('Response Status: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
+
+      debugPrint("Response RunTimeType: ${response.runtimeType}");
 
       return returnResponse(response);
     } on SocketException {

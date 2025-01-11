@@ -113,6 +113,8 @@ class _DetailNoteState extends State<DetailNote> {
                             await NetworkApiServices()
                                 .deleteApiResponse(deleteEndpoint);
 
+                            
+
                             Navigator.of(context).pop();
 
                             ScaffoldMessenger.of(context).showSnackBar(

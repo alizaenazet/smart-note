@@ -154,6 +154,7 @@ class _DashboardState extends State<Dashboard> {
                                  try {
                                   final userId = widget.user.sub;
                                   // Call API to create a new note
+                                  
                                   var response = await NetworkApiServices().postApiResponse(
                                     '/notes',
                                     {
@@ -161,23 +162,27 @@ class _DashboardState extends State<Dashboard> {
                                       'title': 'New Note',
                                       'content': '',
                                       'icon': 'iconName',
-                                      'isCompleted': false,
                                     },
                                   );
-                                  Note newNote = Note.fromJson(response);
-                              
+
+                                  debugPrint("Response in Dashboard: " + response.toString());
+                                  // Note newNote = Note.fromJson(response);
+                          
                                   _loadNotes();
-                              
-                                  if (mounted) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => DetailNote(
-                                          note: newNote,
-                                        ),
-                                      ),
-                                    );
-                                  }
+
+                                  // debugPrint('Created note: $newNote');
+                                  //   if (mounted) {
+                                  //     Navigator.push(
+                                  //       context,
+                                  //       MaterialPageRoute(
+                                  //         builder: (context) => DetailNote(
+                                  //           note: newNote,
+                                  //         ),
+                                  //       ),
+                                  //     );
+                                  //   } else {
+                                  //     throw Exception('Failed to create note.');
+                                  //   }
                                 } catch (e) {
                                   // Handle error
                                   debugPrint('Failed to create note: $e');

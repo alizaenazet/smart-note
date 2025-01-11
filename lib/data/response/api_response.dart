@@ -35,6 +35,7 @@ class ApiResponse<T> {
   dynamic returnResponse(http.Response response) {
     switch (response.statusCode) {
       case 201:
+        return jsonDecode(response.body.toString());
       case 200:
         dynamic responseJson = jsonDecode(response.body);
         return responseJson;
