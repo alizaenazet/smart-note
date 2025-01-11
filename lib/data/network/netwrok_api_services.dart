@@ -87,6 +87,11 @@ class NetworkApiServices implements BaseApiServices {
         body: data != null ? jsonEncode(data) : null,
       );
       debugPrint('Response [$endpoint]: $response');
+
+      // Debugging the raw response
+    debugPrint('Response Status: ${response.statusCode}');
+    debugPrint('Response Body: ${response.body}');
+
       return returnResponse(response);
     } on SocketException {
       throw NoInternetException('');
@@ -129,6 +134,8 @@ class NetworkApiServices implements BaseApiServices {
   dynamic returnResponse(http.Response response) {
     switch (response.statusCode) {
       case 201:
+        dynamic responseJson = jsonDecode(response.body);
+        return responseJson;
       case 200:
         dynamic responseJson = jsonDecode(response.body);
         return responseJson;

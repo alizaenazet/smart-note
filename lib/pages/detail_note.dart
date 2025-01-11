@@ -106,13 +106,12 @@ class _DetailNoteState extends State<DetailNote> {
                         );
                         if (confirm == true) {
                           try {
-                            String noteId =
-                                "123"; // Ganti dengan ID catatan yang sesuai
-                            String deleteUrl =
-                                "https://84af8c7f-2942-44a6-b19b-c0293cf17cb4.mock.pstmn.io/notes/$noteId";
+                            String? noteId =
+                                detailNoteViewModel.note.id;
+                            String deleteEndpoint = 'notes/$noteId';
 
                             await NetworkApiServices()
-                                .deleteApiResponse(deleteUrl);
+                                .deleteApiResponse(deleteEndpoint);
 
                             Navigator.of(context).pop();
 

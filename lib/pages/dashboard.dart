@@ -313,7 +313,7 @@ class _NoteCard extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              note.getIcon,
+              note.getIcon ?? Icons.note,
               size: 60,
             ),
             const SizedBox(width: 15),
@@ -322,7 +322,7 @@ class _NoteCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    note.title!,
+                    note.title ?? 'Untitled',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -330,7 +330,7 @@ class _NoteCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    note.content!,
+                    note.content ?? 'No content',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],
