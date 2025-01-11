@@ -9,6 +9,7 @@ import 'package:smart_note/shared/theme_shared.dart';
 import 'package:smart_note/viewmodel/dashboard_viewmodel.dart';
 import 'package:smart_note/viewmodel/detail_note_viewmodel.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:provider/provider.dart';
 
 part 'login.dart';
 part 'detail_note.dart';

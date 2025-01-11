@@ -15,14 +15,16 @@ class DashboardViewModel with ChangeNotifier {
   }
 
   Future<void> getUserNotes(String userId) async {
-    _notes = ApiResponse.loading();
+    setNotes(ApiResponse.loading());
+    // _notes = ApiResponse.loading();
     notifyListeners();
     try {
       final notes = await _noteRepo.getNotesByUserId(userId);
       setNotes(ApiResponse.completed(notes));
     } catch (e) {
       print("ERROR: $e");
-      _notes = ApiResponse<List<Note>>.error(e.toString());
+      // _notes = ApiResponse<List<Note>>.error(e.toString());
+      setNotes(ApiResponse<List<Note>>.error(e.toString()));
       notifyListeners();
     }
   }

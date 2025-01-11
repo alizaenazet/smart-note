@@ -60,6 +60,8 @@ Widget build(BuildContext context) {
                 ElevatedButton(
                    onPressed: () async {
                   final credentials = await auth0.webAuthentication(scheme: 'smartnote').login(useHTTPS: true);
+
+                  final userId = credentials.user.sub; 
                   setState(() {
                     _credentials = credentials;
                   });

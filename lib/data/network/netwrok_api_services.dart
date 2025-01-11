@@ -74,6 +74,11 @@ class NetworkApiServices implements BaseApiServices {
       };
       final uri =
           Uri.https(Const.smartNoteBaseUrl, endpoint, queryParamsWithKey);
+
+      // Debug print to verify the request
+      debugPrint('Request URL: $uri');
+      debugPrint('Request Body: ${jsonEncode(data)}');
+
       final response = await http.post(
         uri,
         headers: <String, String>{

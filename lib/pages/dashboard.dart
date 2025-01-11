@@ -15,7 +15,9 @@ class _DashboardState extends State<Dashboard> {
   int ongoingTasksCount = 0;
   int _selectedIndex = 0;
   late Auth0 auth0;
-  DashboardViewModel dashboardViewModel = DashboardViewModel();
+  // DashboardViewModel dashboardViewModel = DashboardViewModel();
+  late DashboardViewModel dashboardViewModel;
+
 
   @override
   void initState() {
@@ -24,10 +26,22 @@ class _DashboardState extends State<Dashboard> {
         'DQBYRNAseJL4FpWriBhUrlqU54HumA0l');
 
     // TODO: CHANGE USER ID BY AUTH0 ID
-    dashboardViewModel.getUserNotes("USER_001 ");
-    super.initState();
+    // dashboardViewModel.getUserNotes("USER_001 ");
+
+    dashboardViewModel = DashboardViewModel();
+    _loadNotes();
+    // from auth0 fetch the user id logged in
+    // final userId = widget.user.sub;
+    // dashboardViewModel.getUserNotes("dcfff947-5e56-419b-b218-af29ef2e3669");
+    // super.initState();
   }
 
+    void _loadNotes() {
+      final userId = "dcfff947-5e56-419b-b218-af29ef2e3669";
+      dashboardViewModel.getUserNotes(userId);
+    }
+
+    
   Future<void> _logout() async {
     try {
       await auth0.webAuthentication(scheme: 'smartnote').logout(useHTTPS: true);
@@ -84,161 +98,191 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+   return ChangeNotifierProvider.value(
+      value: dashboardViewModel,
+      // create: (context) => dashboardViewModel,
+      child: Scaffold(
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Consumer<DashboardViewModel>(
+                        builder: (context, dashboardViewModel, child) {
+                          return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                if (widget.user.nickname != null)
-                                  Text(
-                                    'Hi ${widget.user.nickname!}',
-                                    style: title,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (widget.user.nickname != null)
+                                      Text(
+                                        'Hi ${widget.user.nickname!}',
+                                        style: title,
+                                      ),
+                                    Text(
+                                      '$ongoingTasksCount tasks ongoing',
+                                      style: content1,
+                                    ),
+                                  ],
+                                ),
+                                ElevatedButton(
+                                  onPressed: _logout,
+                                  style: ElevatedButton.styleFrom(
+                                    shape: const CircleBorder(),
+                                    padding: const EdgeInsets.all(8),
+                                    backgroundColor: primaryColor,
                                   ),
-                                Text(
-                                  '$ongoingTasksCount tasks ongoing',
-                                  style: content1,
+                                  child: const ImageIcon(
+                                    AssetImage('assets/images/Logout.png'),
+                                    size: 35,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ],
                             ),
-                            ElevatedButton(
-                              onPressed: _logout,
+                            const SizedBox(height: 20),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                 try {
+                                  final userId = widget.user.sub;
+                                  // Call API to create a new note
+                                  var response = await NetworkApiServices().postApiResponse(
+                                    '/notes',
+                                    {
+                                      'user_id': "dcfff947-5e56-419b-b218-af29ef2e3669",
+                                      'title': 'New Note',
+                                      'content': '',
+                                      'icon': 'iconName',
+                                      'isCompleted': false,
+                                    },
+                                  );
+                                  Note newNote = Note.fromJson(response);
+                              
+                                  _loadNotes();
+                              
+                                  if (mounted) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => DetailNote(
+                                          note: newNote,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  // Handle error
+                                  debugPrint('Failed to create note: $e');
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Failed to create note. Please try again.')),
+                                  );
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
-                                shape: const CircleBorder(),
-                                padding: const EdgeInsets.all(8),
                                 backgroundColor: primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
                               ),
-                              child: const ImageIcon(
-                                AssetImage('assets/images/Logout.png'),
+                              icon: const ImageIcon(
+                                AssetImage('assets/images/Create.png'),
                                 size: 35,
-                                color: Colors.white,
+                              ),
+                              label: const Text(
+                                'Create Note',
+                                style: TextStyle(fontSize: 20),
                               ),
                             ),
+                            const SizedBox(height: 30),
+                            const Text(
+                              'Ongoing Tasks',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            dashboardViewModel.notes.status != Status.completed
+                                ? const Center(child: CircularProgressIndicator())
+                                : ongoingNotes.isNotEmpty
+                                    ? Column(
+                                        children: ongoingNotes.map((note) {
+                                          return _NoteCard(
+                                            note: note,
+                                          );
+                                        }).toList(),
+                                      )
+                                    : const Center(child: Text('No ongoing tasks')),
+                            const SizedBox(height: 30),
+                            const Text(
+                              'Completed Tasks',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            dashboardViewModel.notes.status != Status.completed
+                                ? const Center(child: CircularProgressIndicator())
+                                : ongoingNotes.isNotEmpty
+                                    ? Column(
+                                        children: completedNotes.map((note) {
+                                          return _NoteCard(
+                                            note: note,
+                                          );
+                                        }).toList(),
+                                      )
+                                    : const Center(child: Text('No ongoing tasks')),
+                            const Spacer(),
                           ],
-                        ),
-                        const SizedBox(height: 20),
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                             try {
-                              // Call API to create a new note
-                              var response = await NetworkApiServices().postApiResponse(
-                                '/notes',
-                                {
-                                  'title': 'New Note',
-                                  'content': '',
-                                  'isCompleted': false,
-                                },
-                              );
-                              Note newNote = Note.fromJson(response);
+                          );
+                        }
 
-                              if (mounted) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => DetailNote(
-                                      note: newNote,
-                                    ),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              // Handle error
-                              debugPrint('Failed to create note: $e');
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Failed to create note. Please try again.')),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          icon: const ImageIcon(
-                            AssetImage('assets/images/Create.png'),
-                            size: 35,
-                          ),
-                          label: const Text(
-                            'Create Note',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        const Text(
-                          'Ongoing Tasks',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        dashboardViewModel.notes.status != Status.completed
-                            ? const Center(child: CircularProgressIndicator())
-                            : ongoingNotes.isNotEmpty
-                                ? Column(
-                                    children: ongoingNotes.map((note) {
-                                      return _NoteCard(
-                                        note: note,
-                                      );
-                                    }).toList(),
-                                  )
-                                : const Center(child: Text('No ongoing tasks')),
-                        const SizedBox(height: 30),
-                        const Text(
-                          'Completed Tasks',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        dashboardViewModel.notes.status != Status.completed
-                            ? const Center(child: CircularProgressIndicator())
-                            : ongoingNotes.isNotEmpty
-                                ? Column(
-                                    children: completedNotes.map((note) {
-                                      return _NoteCard(
-                                        note: note,
-                                      );
-                                    }).toList(),
-                                  )
-                                : const Center(child: Text('No ongoing tasks')),
-                        const Spacer(),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+              );
+            },
+          ),
+        ),
+        //  bottomNavigationBar: BottomNavBarWidget(
+        //   currentIndex: _selectedIndex,
+        //   onItemTapped: _onItemTapped,
+        //   user: widget.user,
+        //   notes: dashboardViewModel.notes.data ?? [],
+        // ),
+        bottomNavigationBar: Consumer<DashboardViewModel>(
+          builder: (context, viewModel, child) {
+            return BottomNavBarWidget(
+              currentIndex: _selectedIndex,
+              onItemTapped: _onItemTapped,
+              user: widget.user,
+              notes: viewModel.notes.data ?? [],
             );
           },
         ),
       ),
-       bottomNavigationBar: BottomNavBarWidget(
-        currentIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
-        user: widget.user,
-        notes: dashboardViewModel.notes.data ?? [],
-      ),
     );
+  }
+
+  @override
+  void dispose() {
+    dashboardViewModel.dispose();
+    super.dispose();
   }
 }
 
