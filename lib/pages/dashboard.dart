@@ -33,11 +33,12 @@ class _DashboardState extends State<Dashboard> {
     // from auth0 fetch the user id logged in
     // final userId = widget.user.sub;
     // dashboardViewModel.getUserNotes("dcfff947-5e56-419b-b218-af29ef2e3669");
-    // super.initState();
+    super.initState();
   }
 
     void _loadNotes() {
-      final userId = "dcfff947-5e56-419b-b218-af29ef2e3669";
+      // final userId = "dcfff947-5e56-419b-b218-af29ef2e3669";
+      final userId = widget.user.sub;
       dashboardViewModel.getUserNotes(userId);
     }
 
@@ -77,8 +78,8 @@ class _DashboardState extends State<Dashboard> {
     }
 
     return dashboardViewModel.notes.data!
-        .where((note) => note.isCompleted == false)
-        .toList();
+      .where((note) => note.todoList?.isEmpty == true || !note.isCompleted)
+      .toList();
   }
 
   List<Note> get completedNotes {
@@ -92,8 +93,8 @@ class _DashboardState extends State<Dashboard> {
     }
 
     return dashboardViewModel.notes.data!
-        .where((note) => note.isCompleted == true)
-        .toList();
+      .where((note) => note.todoList?.isNotEmpty == true && note.isCompleted)
+      .toList();
   }
 
   @override
@@ -158,14 +159,14 @@ class _DashboardState extends State<Dashboard> {
                                   var response = await NetworkApiServices().postApiResponse(
                                     '/notes',
                                     {
-                                      'user_id': "dcfff947-5e56-419b-b218-af29ef2e3669",
+                                      'user_id': userId,
                                       'title': 'New Note',
                                       'content': '',
                                       'icon': 'iconName',
                                     },
                                   );
 
-                                  debugPrint("Response in Dashboard: " + response.toString());
+                                  // debugPrint("Response in Dashboard: " + response.toString());
                                   // Note newNote = Note.fromJson(response);
                           
                                   _loadNotes();
@@ -227,6 +228,7 @@ class _DashboardState extends State<Dashboard> {
                                         children: ongoingNotes.map((note) {
                                           return _NoteCard(
                                             note: note,
+                                            onNoteDeleted: _loadNotes,
                                           );
                                         }).toList(),
                                       )
@@ -247,6 +249,7 @@ class _DashboardState extends State<Dashboard> {
                                         children: completedNotes.map((note) {
                                           return _NoteCard(
                                             note: note,
+                                            onNoteDeleted: _loadNotes,
                                           );
                                         }).toList(),
                                       )
@@ -293,14 +296,16 @@ class _DashboardState extends State<Dashboard> {
 
 class _NoteCard extends StatelessWidget {
   final Note note;
+  final VoidCallback onNoteDeleted;
 
-  const _NoteCard({required this.note});
+  const _NoteCard({required this.note, required this.onNoteDeleted});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DetailNote(
@@ -308,6 +313,11 @@ class _NoteCard extends StatelessWidget {
             ),
           ),
         );
+
+        if (result == true) {
+          onNoteDeleted(); // Trigger callback to refresh notes
+        }
+
       },
       child: Container(
         padding: const EdgeInsets.all(20),

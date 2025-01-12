@@ -2,6 +2,7 @@ part of 'pages.dart';
 
 class DetailNote extends StatefulWidget {
   final Note note;
+
   const DetailNote({super.key, required this.note});
 
   @override
@@ -10,6 +11,7 @@ class DetailNote extends StatefulWidget {
 
 class _DetailNoteState extends State<DetailNote> {
   final Note note;
+
   _DetailNoteState({required this.note});
 
   DetailNoteViewModel detailNoteViewModel = DetailNoteViewModel();
@@ -27,6 +29,8 @@ class _DetailNoteState extends State<DetailNote> {
       note.todoList = [];
     }
     detailNoteViewModel.setNote(note);
+
+    
   }
 
   final List<Map<String, dynamic>> iconCategories = [
@@ -113,9 +117,9 @@ class _DetailNoteState extends State<DetailNote> {
                             await NetworkApiServices()
                                 .deleteApiResponse(deleteEndpoint);
 
-                            
+                            // pop back to dashboard
+                            Navigator.of(context).pop(true);
 
-                            Navigator.of(context).pop();
 
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

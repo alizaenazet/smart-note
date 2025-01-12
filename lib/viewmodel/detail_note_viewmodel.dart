@@ -71,7 +71,7 @@ class DetailNoteViewModel with ChangeNotifier {
 
   Future<void> addTask(String task) async {
     // TODO: Add task to the note in the database by hit the API
-
+    
     // TODO: Add task to the note in the local state
     _note.todoList!.add(Task(
       id: 0,
@@ -81,6 +81,5 @@ class DetailNoteViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-   Future<void> updateTask() async {
-   }
+  Future<void> updateTask() async {}
 }
