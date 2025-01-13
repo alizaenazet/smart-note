@@ -23,6 +23,17 @@ class NoteRepository {
     }
   }
 
+  Future <dynamic> createNote(String userId) async {
+    dynamic response = await NetworkApiServices().postApiResponse('/notes', {
+      'user_id': userId,
+      'title': 'New Note',
+      'content': 'No content',
+      'icon': 'iconName',
+    });
+    debugPrint('Response: $response');
+    return response;
+  }
+
   Future<Note> getNoteById(String noteId) async {
     try {
       dynamic response = await _apiServices.getApiResponse('note/$noteId');
@@ -46,6 +57,19 @@ class NoteRepository {
 
       debugPrint('\n\n🚨🚨🚨\n🚨🚨\n🚨CASTING TASKS: $tasks');
       return tasks;
+    } catch (e) {
+      debugPrint("ERROR: $e");
+      rethrow;
+    }
+  }
+
+  Future updateNote(Note note) async {
+    try {
+      dynamic response = await _apiServices.putApiResponse('notes/${note.id}',
+          note.toMap(), queryParams: {"title": note.title,"content": note.content,"icon": note.icon});
+      Note updatedNote = Note.fromMap(response);
+      debugPrint('CASTING NOTE: $updatedNote');
+      return updatedNote;
     } catch (e) {
       debugPrint("ERROR: $e");
       rethrow;

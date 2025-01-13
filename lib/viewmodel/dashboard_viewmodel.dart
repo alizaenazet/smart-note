@@ -54,4 +54,10 @@ class DashboardViewModel with ChangeNotifier {
     }
 
   }
+
+  // Create Note
+  Future createNote(String userId) async {
+    final response = await _noteRepo.createNote(userId);
+    return response;
+  }
 }

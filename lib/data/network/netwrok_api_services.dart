@@ -111,6 +111,7 @@ class NetworkApiServices implements BaseApiServices {
       final queryParamsWithKey = {
         ...?queryParams,
       };
+      debugPrint("Icon:" + queryParamsWithKey.toString());
       final uri =
           Uri.https(Const.smartNoteBaseUrl, endpoint, queryParamsWithKey);
     print("\n\n🛜🛜🛜\nPUT URI: $uri");
@@ -122,6 +123,7 @@ class NetworkApiServices implements BaseApiServices {
       body: data != null ? jsonEncode(data) : null,
     );
     debugPrint('Response [$endpoint]: $response');
+    debugPrint('Response status code: ' + response.statusCode.toString());
     return returnResponse(response);
   } on SocketException {
     throw NoInternetException('No Internet Connection');

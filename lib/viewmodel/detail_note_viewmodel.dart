@@ -8,8 +8,16 @@ class DetailNoteViewModel with ChangeNotifier {
   Note _note = Note();
   Note get note => _note;
 
+  bool _isLoading = false;
+  String? _error;
+
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
   bool _isGenerateTasks = false;
   bool get isGenerateTasks => _isGenerateTasks;
+
+
 
   setNote(Note value) {
     _note = value;
@@ -21,12 +29,21 @@ class DetailNoteViewModel with ChangeNotifier {
     _note.isComplete = status;
     notifyListeners();
   }
-
+  void setNoteTitle(String title) {
+    debugPrint("New Title: $title");
+    _note.title = title;
+    debugPrint("_note.title: ${_note.title}");
+    notifyListeners();
+  }
   void setNoteContent(String content) {
     _note.content = content;
     notifyListeners();
   }
 
+  void setIcon(String icon) {
+    _note.icon = icon;
+    notifyListeners();
+  }
   void updateNote(
     String title,
     String content,
@@ -35,10 +52,6 @@ class DetailNoteViewModel with ChangeNotifier {
     _note.title = title;
     _note.content = content;
     _note.icon = icon;
-
-    // TODO: Update note in the database by hit the API
-
-
     notifyListeners();
   }
 
@@ -85,14 +98,26 @@ class DetailNoteViewModel with ChangeNotifier {
 
   Future<void> deleteTask(Task task) async {
     // Delete the tasks from the application locally without hitting the API
-    
-  }
-
-  Future<void> saveNote() async {
-    // TODO: Save note to the database by hit the API of the state of the detail_note
-
 
   }
+
+  Future<void> saveNote(Note note) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      await _noteRepo.updateNote(note);
+      
+    } catch (e) {
+      _error = 'Failed to update note: ${e.toString()}';
+      debugPrint("Error updating note: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
 
   Future<void> updateTask() async {}
 }

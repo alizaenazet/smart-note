@@ -17,6 +17,9 @@ class _DetailNoteState extends State<DetailNote> {
   DetailNoteViewModel detailNoteViewModel = DetailNoteViewModel();
 
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  
+
   List<Task> tasks = [];
   String _selectedStatus = 'Ongoing';
   String _selectedIcon = 'Gardening';
@@ -30,9 +33,25 @@ class _DetailNoteState extends State<DetailNote> {
       note.todoList = [];
     }
     detailNoteViewModel.setNote(note);
+    _notesController.text = note.content ?? '';
 
-    
+    refreshPage();
+
   }
+
+    void refreshPage() {
+      // Fetch the latest note data or update the UI state
+      detailNoteViewModel.setNote(note);
+
+      // Update the text controller with the current note content
+      _notesController.text = note.content ?? '';
+
+      // Update the selected status based on the note's completion status
+      setState(() {
+        _selectedStatus = note.isComplete! ? 'Completed' : 'Ongoing';
+      });
+    }      
+  
 
   final List<Map<String, dynamic>> iconCategories = [
     {'name': 'Gardening', 'icon': Icons.local_florist},
@@ -63,7 +82,7 @@ class _DetailNoteState extends State<DetailNote> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pop(context, true);
                       },
                       style: ElevatedButton.styleFrom(
                         shape: CircleBorder(),
@@ -78,12 +97,54 @@ class _DetailNoteState extends State<DetailNote> {
                     ),
                     Flexible(
                       child: Text(
-                        detailNoteViewModel.note.title!,
+                         detailNoteViewModel.note.title ?? '',
                         style: title,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
                     ),
+
+                    IconButton(
+                    icon: Icon(Icons.edit, color: Colors.grey),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          // Initialize with current note title
+                          TextEditingController titleController = TextEditingController(
+                            text: detailNoteViewModel.note.title ?? '',
+                          );
+
+                          return AlertDialog(
+                            title: Text('Edit Title'),
+                            content: TextField(
+                              controller: titleController,
+                              decoration: InputDecoration(
+                                hintText: 'Enter new title',
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context); // Just close the dialog without saving
+                                },
+                                child: Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  // Update the actual note title
+                                  detailNoteViewModel.setNoteTitle(titleController.text);
+                                  Navigator.pop(context);
+                                  refreshPage();
+                                },
+                                child: Text('Save'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
                     ElevatedButton(
                       onPressed: () async {
                         bool? confirm = await showDialog(
@@ -221,6 +282,10 @@ class _DetailNoteState extends State<DetailNote> {
                           color: primaryColor.withOpacity(0.5)),
                       border: InputBorder.none,
                     ),
+                    // Initial value for editing
+                    onChanged: (value) {
+                      detailNoteViewModel.setNoteContent(value);
+                    },
                   ),
                 ),
                 SizedBox(height: 20),
@@ -248,7 +313,7 @@ class _DetailNoteState extends State<DetailNote> {
                       ),
                       SizedBox(height: 8),
                       DropdownButton<String>(
-                        value: _selectedIcon,
+                        value: detailNoteViewModel.note.icon,
                         icon: ImageIcon(
                           AssetImage('assets/images/ArrowDown.png'),
                           size: 24,
@@ -266,8 +331,8 @@ class _DetailNoteState extends State<DetailNote> {
                         ),
                         onChanged: (String? newValue) {
                           setState(() {
-                            _selectedIcon = newValue!;
-                          });
+                            detailNoteViewModel.setIcon(newValue!);
+                          }); 
                         },
                         items: iconCategories.map<DropdownMenuItem<String>>(
                             (Map<String, dynamic> category) {
@@ -300,10 +365,34 @@ class _DetailNoteState extends State<DetailNote> {
                             borderRadius: BorderRadius.circular(25),
                           ),
                         ),
-                        onPressed: () {
-                          detailNoteViewModel.updateNote(note.title!,
-                              _notesController.text, _selectedIcon);
-                        },
+                        onPressed: detailNoteViewModel.isLoading
+                        ? null
+                        : () async {
+                          
+                            // Persist changes to the backend or database
+                            await detailNoteViewModel.saveNote(note);
+                            
+                            if (detailNoteViewModel.error != null) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(detailNoteViewModel.error!),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Note updated successfully'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                            
+                              }
+                            }
+                          },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

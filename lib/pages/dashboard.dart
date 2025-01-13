@@ -156,15 +156,17 @@ class _DashboardState extends State<Dashboard> {
                                   final userId = widget.user.sub;
                                   // Call API to create a new note
                                   
-                                  var response = await NetworkApiServices().postApiResponse(
-                                    '/notes',
-                                    {
-                                      'user_id': userId,
-                                      'title': 'New Note',
-                                      'content': '',
-                                      'icon': 'iconName',
-                                    },
-                                  );
+                                  // var response = await NetworkApiServices().postApiResponse(
+                                  //   '/notes',
+                                  //   {
+                                  //     'user_id': userId,
+                                  //     'title': 'New Note',
+                                  //     'content': '',
+                                  //     'icon': 'iconName',
+                                  //   },
+                                  // );
+
+                                  var response = await dashboardViewModel.createNote(userId);
 
                                   // debugPrint("Response in Dashboard: " + response.toString());
                                   // debugPrint("id response " + response['id'].toString());
@@ -285,6 +287,7 @@ class _DashboardState extends State<Dashboard> {
         //   user: widget.user,
         //   notes: dashboardViewModel.notes.data ?? [],
         // ),
+        
         bottomNavigationBar: Consumer<DashboardViewModel>(
           builder: (context, viewModel, child) {
             return BottomNavBarWidget(

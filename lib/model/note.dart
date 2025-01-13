@@ -71,7 +71,11 @@ class Note extends Equatable {
   }
 
   IconData get getIcon {
-    switch (icon) {
+    if (icon == null) {
+      return Icons.help_outline; // Default icon when icon is null
+    }
+    debugPrint("Icon in getIcon: $icon");
+    switch (icon?.toLowerCase()) {
       case 'work':
         return Icons.work;
       case 'gardening':
@@ -94,6 +98,31 @@ class Note extends Equatable {
         return Icons.note_alt_outlined;
     }
   }
+
+  // String get getIconName {
+  //   switch (icon) {
+  //     case 'work':
+  //       return 'Work';
+  //     case 'gardening':
+  //       return 'Gardening';
+  //     case 'sports':
+  //       return 'Sports';
+  //     case 'cooking':
+  //       return 'Cooking';
+  //     case 'study':
+  //       return 'Study';
+  //     case 'travel':
+  //       return 'Travel';
+  //     case 'shopping':
+  //       return 'Shopping';
+  //     case 'health':
+  //       return 'Health';
+  //     case 'finance':
+  //       return 'Finance';
+  //     default:
+  //       return 'Note';
+  //   }
+  // }
 
   bool get isCompleted {
     return todoList!.every((task) => task.isCompleted!);
