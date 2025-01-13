@@ -1,10 +1,15 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:smart_note/model/note.dart';
 import 'package:smart_note/model/task.dart';
 import 'package:smart_note/repository/note_repo.dart';
+import 'package:smart_note/repository/todo_repo.dart';
 
 class DetailNoteViewModel with ChangeNotifier {
   final _noteRepo = NoteRepository();
+  final _todoRepo = ToDoRepository();
+
   Note _note = Note();
   Note get note => _note;
 
@@ -55,6 +60,24 @@ class DetailNoteViewModel with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> refetchNote() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final updatedNote = await _noteRepo.getNoteById(_note.id!);
+      debugPrint("updatedNote in refetchNote: "+ updatedNote.toString());
+      _note = updatedNote;
+    
+    } catch (e) {
+      _error = 'Failed to fetch note: ${e.toString()}';
+      debugPrint("Error fetching note: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> generateTasks() async {
     if (_note.content == null ||
         _note.content!.isEmpty ||
@@ -84,22 +107,52 @@ class DetailNoteViewModel with ChangeNotifier {
     }
   }
 
-  Future<void> addTask(String task) async {
-    // TODO: Add task to the note in the database by hit the API
-    
-    // TODO: Add task to the note in the local state
-    _note.todoList!.add(Task(
-      id: 0,
-      todo: task,
-      isCompleted: false,
-    ));
+  Future <void> setTasks(List<Task> tasks) async{
+    _note.todoList = tasks;
     notifyListeners();
   }
 
-  Future<void> deleteTask(Task task) async {
-    // Delete the tasks from the application locally without hitting the API
+  Future<void> addTask(String noteId, String taskContent, bool isCompleted) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
 
+      // Create a new task
+      final newTask = Task(
+        todo: taskContent,
+        isCompleted: isCompleted,
+      );
+
+      // Initialize todoList if null
+      if (_note.todoList == null) {
+        _note.todoList = [];
+      }
+
+      // Add to local state first for immediate UI update
+      _note.todoList!.add(newTask);
+      notifyListeners();
+
+      // Update in backend
+      await _noteRepo.createTodo(noteId, taskContent, isCompleted);
+      
+      // Refresh note data from server to get the updated task with ID
+      final updatedNote = await _noteRepo.getNoteById(noteId);
+      _note = updatedNote;
+
+    } catch (e) {
+      _error = 'Failed to add task: ${e.toString()}';
+      debugPrint("Error adding task: $e");
+      
+      // Rollback the local change if server update failed
+      if (_note.todoList != null && _note.todoList!.isNotEmpty) {
+        _note.todoList!.removeLast();
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
+
 
   Future<void> saveNote(Note note) async {
     try {
@@ -119,5 +172,28 @@ class DetailNoteViewModel with ChangeNotifier {
   }
 
 
-  Future<void> updateTask() async {}
+  Future<void> updateTask(String noteId, String todoId, String title, bool isFinished) async {
+    try{
+      await _todoRepo.updateTodo(noteId, todoId, title, isFinished);
+    }catch(e){
+      _error = 'Failed to update task: ${e.toString()}';
+      debugPrint("Error updating task: $e");
+    }
+
+  }
+
+  
+  Future<void> deleteTask(String noteId, String todoId) async {
+    try{
+      debugPrint("Delete note id: $noteId, todo id: $todoId");
+      await _todoRepo.deleteTodo(noteId, todoId);
+      notifyListeners();
+      
+    }catch(e){
+      _error = 'Failed to delete task: ${e.toString()}';
+      debugPrint("Error deleting task: $e");
+    }
+
+  }
+  
 }

@@ -36,21 +36,25 @@ class _DetailNoteState extends State<DetailNote> {
     _notesController.text = note.content ?? '';
 
     refreshPage();
+   
 
   }
+  Future<void> refreshPage({bool refreshFromBackend = false}) async {
+    if (refreshFromBackend) {
+      await detailNoteViewModel.refetchNote();
+    }
+    
+    setState(() {
+      _notesController.text = detailNoteViewModel.note.content ?? '';
+      _titleController.text = detailNoteViewModel.note.title ?? '';
+      tasks = detailNoteViewModel.note.todoList ?? [];
+      _selectedStatus = detailNoteViewModel.note.isComplete! ? 'Completed' : 'Ongoing';
+      _selectedIcon = detailNoteViewModel.note.icon ?? 'Other';
+    });
 
-    void refreshPage() {
-      // Fetch the latest note data or update the UI state
-      detailNoteViewModel.setNote(note);
-
-      // Update the text controller with the current note content
-      _notesController.text = note.content ?? '';
-
-      // Update the selected status based on the note's completion status
-      setState(() {
-        _selectedStatus = note.isComplete! ? 'Completed' : 'Ongoing';
-      });
-    }      
+    debugPrint("Page refreshed successfully.");
+  }
+    
   
 
   final List<Map<String, dynamic>> iconCategories = [
@@ -492,20 +496,25 @@ class _DetailNoteState extends State<DetailNote> {
                                       child: Text('Cancel'),
                                     ),
                                     TextButton(
-                                      onPressed: () {
+                                      onPressed: () async {
+
+                                        await detailNoteViewModel.addTask(detailNoteViewModel.note.id!, taskController.text, false);
                                         setState(() {
                                     
-                                          if (taskController.text.isNotEmpty) {
+                                          // if (taskController.text.isNotEmpty) {
                                            
-                                            tasks.add(Task(
-                                              todo: taskController.text,
-                                              isCompleted: false,
-                                            ));
-                                          }else{
-                                            debugPrint("Task Controller Empty");
-                                            // debugPrint(tasks[3].todo);
-                                          }
+                                          //   tasks.add(Task(
+                                          //     todo: taskController.text,
+                                          //     isCompleted: false,
+                                          //   ));
+
+                                            
+                                          // }else{
+                                          //   debugPrint("Task Controller Empty");
+                                          //   // debugPrint(tasks[3].todo);
+                                          // }
                                         });
+                                        refreshPage();
                                         Navigator.pop(context);
                                       },
                                       child: Text('Add'),
@@ -569,7 +578,7 @@ class _DetailNoteState extends State<DetailNote> {
                                             .todoList![index]
                                             .isCompleted ??
                                         false);
-                                    if (tasks.every((task) =>
+                                    if (note.todoList!.every((task) =>
                                         (task.isCompleted ?? false))) {
                                       _selectedStatus = 'Completed';
                                     } else {
@@ -615,8 +624,8 @@ class _DetailNoteState extends State<DetailNote> {
                                             ),
                                             TextButton(
                                               onPressed: () async {
-                                                detailNoteViewModel
-                                                    .updateTask();
+                                                // detailNoteViewModel
+                                                //     .updateTask(detailNoteViewModel.note.id!, String todoId, String title, bool isFinished);
                                               },
                                               child: Text('Save'),
                                             ),
@@ -624,9 +633,19 @@ class _DetailNoteState extends State<DetailNote> {
                                         );
                                       },
                                     );
-                                  } else if (value == 'Delete') {
-                                    setState(() {
-                                      tasks.removeAt(index);
+                                  } else if (value == 'Delete') { 
+                                    debugPrint("Deleting task at index $index");
+                                    
+                                    detailNoteViewModel.deleteTask(
+                                      detailNoteViewModel.note.id!,
+                                      tasks[index].id.toString(),
+                                    ).then((_) {
+                                      setState(() {
+                                        tasks.removeAt(index);
+                                      });
+                                      debugPrint("Task deleted successfully.");
+                                    }).catchError((error) {
+                                      debugPrint("Error during task deletion: $error");
                                     });
                                   }
                                 },

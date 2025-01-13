@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:smart_note/data/network/netwrok_api_services.dart';
 import 'package:smart_note/model/note.dart';
@@ -38,7 +40,7 @@ class NoteRepository {
     try {
       dynamic response = await _apiServices.getApiResponse('note/$noteId');
       Note note = Note.fromMap(response);
-      debugPrint('CASTING NOTE: $note');
+      debugPrint('CASTING NOTE By ID: $note');
       return note;
     } catch (e) {
       debugPrint("ERROR: $e");
@@ -70,6 +72,18 @@ class NoteRepository {
       Note updatedNote = Note.fromMap(response);
       debugPrint('CASTING NOTE: $updatedNote');
       return updatedNote;
+    } catch (e) {
+      debugPrint("ERROR: $e");
+      rethrow;
+    }
+  }
+
+
+  Future createTodo(String noteId, String text, bool isFinished) async {
+    try {
+      dynamic response = await _apiServices.postApiResponse('notes/$noteId/todos',
+          {"text": text, "is_finished": isFinished});
+      return response;
     } catch (e) {
       debugPrint("ERROR: $e");
       rethrow;

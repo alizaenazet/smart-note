@@ -21,6 +21,9 @@ class NetworkApiServices implements BaseApiServices {
           'Content-Type': 'application/json',
         },
       );
+      if (response.statusCode != 200) {
+              throw Exception('Failed to delete note');
+      }
       debugPrint('Response [$endpoint]: $response');
       return returnResponse(response);
     } on SocketException {
