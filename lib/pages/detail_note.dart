@@ -54,7 +54,25 @@ class _DetailNoteState extends State<DetailNote> {
 
     debugPrint("Page refreshed successfully.");
   }
-    
+    // Future<void> refreshPage() async {
+    //   debugPrint("Page Refreshed!");
+    //   // Fetch the latest note data or update the UI state
+      
+
+    //   // Update the text controller with the current note content
+    //   _notesController.text = note.content ?? '';
+
+    //   // Update tasks
+    //   debugPrint("TodoList"+ note.todoList.toString());
+    //   tasks = note.todoList ?? [];
+
+    //   // Update the selected status based on the note's completion status
+    //   setState(() {
+    //     _selectedStatus = note.isComplete! ? 'Completed' : 'Ongoing';
+    //   });
+
+    //   detailNoteViewModel.refetchNote();
+    // }      
   
 
   final List<Map<String, dynamic>> iconCategories = [
@@ -624,8 +642,28 @@ class _DetailNoteState extends State<DetailNote> {
                                             ),
                                             TextButton(
                                               onPressed: () async {
-                                                // detailNoteViewModel
-                                                //     .updateTask(detailNoteViewModel.note.id!, String todoId, String title, bool isFinished);
+                                                // update task
+                                                String todoId = detailNoteViewModel
+                                                    .note.todoList![index].id
+                                                    .toString();
+                                                String title = editController
+                                                    .text;
+                                                bool isFinished = detailNoteViewModel
+                                                    .note.todoList![index]
+                                                    .isCompleted ?? false;
+                                                detailNoteViewModel
+                                                    .updateTask(detailNoteViewModel.note.id!, todoId, title, isFinished); 
+
+                                                setState(() {
+                                                  detailNoteViewModel
+                                                      .note.todoList![index]
+                                                      .todo = title;
+                                                  detailNoteViewModel
+                                                      .note.todoList![index]
+                                                      .isCompleted = isFinished;
+                                                });
+                                                refreshPage();
+                                                Navigator.pop(context);
                                               },
                                               child: Text('Save'),
                                             ),
