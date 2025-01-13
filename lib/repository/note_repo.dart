@@ -23,6 +23,18 @@ class NoteRepository {
     }
   }
 
+  Future<Note> getNoteById(String noteId) async {
+    try {
+      dynamic response = await _apiServices.getApiResponse('note/$noteId');
+      Note note = Note.fromMap(response);
+      debugPrint('CASTING NOTE: $note');
+      return note;
+    } catch (e) {
+      debugPrint("ERROR: $e");
+      rethrow;
+    }
+  }
+
   Future<List<Task>> generateNoteTasks(String noteId, String note) async {
     try {
       dynamic response = await _apiServices

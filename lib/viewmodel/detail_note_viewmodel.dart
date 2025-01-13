@@ -37,6 +37,8 @@ class DetailNoteViewModel with ChangeNotifier {
     _note.icon = icon;
 
     // TODO: Update note in the database by hit the API
+
+
     notifyListeners();
   }
 
@@ -79,6 +81,17 @@ class DetailNoteViewModel with ChangeNotifier {
       isCompleted: false,
     ));
     notifyListeners();
+  }
+
+  Future<void> deleteTask(Task task) async {
+    // Delete the tasks from the application locally without hitting the API
+    
+  }
+
+  Future<void> saveNote() async {
+    // TODO: Save note to the database by hit the API of the state of the detail_note
+
+
   }
 
   Future<void> updateTask() async {}

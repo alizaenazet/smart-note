@@ -167,23 +167,35 @@ class _DashboardState extends State<Dashboard> {
                                   );
 
                                   // debugPrint("Response in Dashboard: " + response.toString());
+                                  // debugPrint("id response " + response['id'].toString());
                                   // Note newNote = Note.fromJson(response);
-                          
+                                  
+                                  if (response == null) {
+                                    throw Exception('Failed to create note.');
+                                  }else{
+
                                   _loadNotes();
 
+                                  // Ensure getSpecificUserNote completes before navigating
+                                  final Note createdNote = await dashboardViewModel.getSpecificUserNote(
+                                    response['id'].toString(),
+                                  );
+
                                   // debugPrint('Created note: $newNote');
-                                  //   if (mounted) {
-                                  //     Navigator.push(
-                                  //       context,
-                                  //       MaterialPageRoute(
-                                  //         builder: (context) => DetailNote(
-                                  //           note: newNote,
-                                  //         ),
-                                  //       ),
-                                  //     );
-                                  //   } else {
-                                  //     throw Exception('Failed to create note.');
-                                  //   }
+                                    if (mounted) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => DetailNote(
+                                            note: createdNote,
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      throw Exception('Failed to create note.');
+                                    }
+                                  }
+                                  
                                 } catch (e) {
                                   // Handle error
                                   debugPrint('Failed to create note: $e');
@@ -244,7 +256,7 @@ class _DashboardState extends State<Dashboard> {
                             const SizedBox(height: 20),
                             dashboardViewModel.notes.status != Status.completed
                                 ? const Center(child: CircularProgressIndicator())
-                                : ongoingNotes.isNotEmpty
+                                : completedNotes.isNotEmpty
                                     ? Column(
                                         children: completedNotes.map((note) {
                                           return _NoteCard(

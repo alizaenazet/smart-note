@@ -21,6 +21,7 @@ class _DetailNoteState extends State<DetailNote> {
   String _selectedStatus = 'Ongoing';
   String _selectedIcon = 'Gardening';
 
+
   @override
   void initState() {
     super.initState();
@@ -75,8 +76,6 @@ class _DetailNoteState extends State<DetailNote> {
                         color: Colors.white,
                       ),
                     ),
-                    // Text(detailNoteViewModel.note.title!,
-                    //     style: title, overflow: TextOverflow.ellipsis),
                     Flexible(
                       child: Text(
                         detailNoteViewModel.note.title!,
@@ -386,8 +385,7 @@ class _DetailNoteState extends State<DetailNote> {
                             showDialog(
                               context: context,
                               builder: (BuildContext context) {
-                                TextEditingController taskController =
-                                    TextEditingController();
+                                TextEditingController taskController = TextEditingController();
 
                                 return AlertDialog(
                                   title: Text('Add New Task'),
@@ -407,11 +405,16 @@ class _DetailNoteState extends State<DetailNote> {
                                     TextButton(
                                       onPressed: () {
                                         setState(() {
+                                    
                                           if (taskController.text.isNotEmpty) {
+                                           
                                             tasks.add(Task(
                                               todo: taskController.text,
                                               isCompleted: false,
                                             ));
+                                          }else{
+                                            debugPrint("Task Controller Empty");
+                                            // debugPrint(tasks[3].todo);
                                           }
                                         });
                                         Navigator.pop(context);
@@ -443,6 +446,7 @@ class _DetailNoteState extends State<DetailNote> {
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
                       itemCount: detailNoteViewModel.note.todoList!.length,
+                      // itemCount: tasks.length,
                       itemBuilder: (context, index) {
                         return Container(
                           margin: EdgeInsets.only(bottom: 8),

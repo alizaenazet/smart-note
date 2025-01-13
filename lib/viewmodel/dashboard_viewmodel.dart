@@ -9,6 +9,9 @@ class DashboardViewModel with ChangeNotifier {
   ApiResponse<List<Note>> _notes = ApiResponse<List<Note>>.notStarted();
   ApiResponse<List<Note>> get notes => _notes;
 
+  ApiResponse<Note> _pickednote = ApiResponse<Note>.notStarted();
+  ApiResponse<Note> get pickednote => _pickednote;
+
   setNotes(ApiResponse<List<Note>> value) {
     _notes = value;
     notifyListeners();
@@ -27,5 +30,28 @@ class DashboardViewModel with ChangeNotifier {
       setNotes(ApiResponse<List<Note>>.error(e.toString()));
       notifyListeners();
     }
+  }
+
+  specificNote(ApiResponse<Note> value) {
+    _pickednote = value;
+    notifyListeners();
+  }
+
+  Future <Note> getSpecificUserNote(String noteId) async {
+    specificNote(ApiResponse.loading());
+    // _notes = ApiResponse.loading();
+    notifyListeners();
+    try {
+      final note = await _noteRepo.getNoteById(noteId);
+      specificNote(ApiResponse.completed(note));
+      return note;
+    } catch (e) {
+      print("ERROR: $e");
+      // _notes = ApiResponse<List<Note>>.error(e.toString());
+      specificNote(ApiResponse<Note>.error(e.toString()));
+      notifyListeners();
+      return Note();
+    }
+
   }
 }
