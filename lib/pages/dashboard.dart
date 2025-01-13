@@ -129,7 +129,7 @@ class _DashboardState extends State<Dashboard> {
                                         style: title,
                                       ),
                                     Text(
-                                      '$ongoingTasksCount tasks ongoing',
+                                      '${ongoingNotes.length} ${ongoingNotes.length == 1 ? 'task' : 'tasks'} ongoing',
                                       style: content1,
                                     ),
                                   ],

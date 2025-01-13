@@ -48,7 +48,15 @@ class _DetailNoteState extends State<DetailNote> {
       _notesController.text = detailNoteViewModel.note.content ?? '';
       _titleController.text = detailNoteViewModel.note.title ?? '';
       tasks = detailNoteViewModel.note.todoList ?? [];
-      _selectedStatus = detailNoteViewModel.note.isComplete! ? 'Completed' : 'Ongoing';
+
+      // check if note have any tasks
+      if (tasks.isNotEmpty) {
+        _selectedStatus = tasks.any((task) => !task.isCompleted!) ? 'Ongoing' : 'Completed';
+      } else {
+        _selectedStatus = 'Ongoing';
+      }
+
+      // _selectedStatus = detailNoteViewModel.note.isComplete! ? 'Completed' : 'Ongoing';
       _selectedIcon = detailNoteViewModel.note.icon ?? 'Other';
     });
 
@@ -231,7 +239,9 @@ class _DetailNoteState extends State<DetailNote> {
                 SizedBox(height: 20),
 
                 // Task Status
+                
                 Container(
+                  width: double.infinity,
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -252,35 +262,24 @@ class _DetailNoteState extends State<DetailNote> {
                         style: TextStyle(color: Colors.grey),
                       ),
                       SizedBox(height: 8),
-                      DropdownButton<String>(
-                        value: _selectedStatus,
-                        icon: ImageIcon(
-                          AssetImage('assets/images/ArrowDown.png'),
-                          size: 24,
-                          color: primaryColor,
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: _selectedStatus == 'Completed'
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        isExpanded: true,
-                        elevation: 16,
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          _selectedStatus,
+                          style: TextStyle(
+                            color: _selectedStatus == 'Completed'
+                                ? Colors.green
+                                : Colors.orange,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        underline: Container(
-                          height: 0,
-                        ),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedStatus = newValue!;
-                          });
-                        },
-                        items: <String>['Ongoing', 'Completed']
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
                       ),
                     ],
                   ),
@@ -393,6 +392,12 @@ class _DetailNoteState extends State<DetailNote> {
                           
                             // Persist changes to the backend or database
                             await detailNoteViewModel.saveNote(note);
+
+                            // Persist changes to the backend for tasks
+                            for (var task in detailNoteViewModel.note.todoList!) {
+                              await detailNoteViewModel.updateTask(
+                                  note.id!, task.id!.toString(), task.todo!, task.isCompleted!);
+                            }
                             
                             if (detailNoteViewModel.error != null) {
                               if (context.mounted) {
@@ -518,19 +523,6 @@ class _DetailNoteState extends State<DetailNote> {
 
                                         await detailNoteViewModel.addTask(detailNoteViewModel.note.id!, taskController.text, false);
                                         setState(() {
-                                    
-                                          // if (taskController.text.isNotEmpty) {
-                                           
-                                          //   tasks.add(Task(
-                                          //     todo: taskController.text,
-                                          //     isCompleted: false,
-                                          //   ));
-
-                                            
-                                          // }else{
-                                          //   debugPrint("Task Controller Empty");
-                                          //   // debugPrint(tasks[3].todo);
-                                          // }
                                         });
                                         refreshPage();
                                         Navigator.pop(context);
@@ -596,8 +588,9 @@ class _DetailNoteState extends State<DetailNote> {
                                             .todoList![index]
                                             .isCompleted ??
                                         false);
-                                    if (note.todoList!.every((task) =>
-                                        (task.isCompleted ?? false))) {
+                                    if (detailNoteViewModel.note.todoList!
+                                        .every((task) =>
+                                            (task.isCompleted ?? false))) {
                                       _selectedStatus = 'Completed';
                                     } else {
                                       _selectedStatus = 'Ongoing';

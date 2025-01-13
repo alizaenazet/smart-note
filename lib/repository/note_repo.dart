@@ -30,7 +30,7 @@ class NoteRepository {
       'user_id': userId,
       'title': 'New Note',
       'content': 'No content',
-      'icon': 'iconName',
+      'icon': 'Work',
     });
     debugPrint('Response: $response');
     return response;
