@@ -26,7 +26,7 @@ class _DetailNoteState extends State<DetailNote> {
   @override
   void initState() {
     super.initState();
-    _selectedStatus = note.isComplete! ? 'Completed' : 'Ongoing';
+    _selectedStatus = note.isCompleted ? 'Completed' : 'Ongoing';
     if (note.todoList == null) {
       note.todoList = [];
     }
@@ -585,20 +585,36 @@ class _DetailNoteState extends State<DetailNote> {
                                   color: primaryColor,
                                 ),
                                 onPressed: () {
-                                  setState(() {
-                                    detailNoteViewModel.note.todoList![index]
-                                        .isCompleted = !(detailNoteViewModel
-                                            .note
-                                            .todoList![index]
-                                            .isCompleted ??
-                                        false);
-                                    if (detailNoteViewModel.note.todoList!
-                                        .every((task) =>
-                                            (task.isCompleted ?? false))) {
-                                      _selectedStatus = 'Completed';
-                                    } else {
-                                      _selectedStatus = 'Ongoing';
-                                    }
+                                  String todoId = detailNoteViewModel
+                                      .note.todoList![index].id
+                                      .toString();
+                                  String title = detailNoteViewModel
+                                      .note.todoList![index].todo!;
+                                  bool isFinished = !(detailNoteViewModel
+                                      .note.todoList![index].isCompleted!);
+                                  detailNoteViewModel
+                                      .updateTask(detailNoteViewModel.note.id!,
+                                          todoId, title, isFinished)
+                                      .then((val) {
+                                    setState(() {
+                                      detailNoteViewModel.note.todoList![index]
+                                          .isCompleted = !(detailNoteViewModel
+                                              .note
+                                              .todoList![index]
+                                              .isCompleted ??
+                                          false);
+                                      // if (detailNoteViewModel.note.todoList!
+                                      //     .every((task) =>
+                                      //         (task.isCompleted ?? false))) {
+                                      //   _selectedStatus = 'Completed';
+                                      // } else {
+                                      //   _selectedStatus = 'Ongoing';
+                                      // }
+                                      _selectedStatus = note.isCompleted
+                                          ? 'Completed'
+                                          : 'Ongoing';
+                                    });
+                                    refreshPage();
                                   });
                                 },
                               ),

@@ -367,7 +367,9 @@ class _NoteCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    note.content ?? 'No content',
+                    (note.content?.length ?? 0) > 100
+                        ? '${note.content!.substring(0, 100)}...'
+                        : note.content ?? 'No content',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],
