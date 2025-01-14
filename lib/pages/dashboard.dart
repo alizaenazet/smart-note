@@ -18,7 +18,6 @@ class _DashboardState extends State<Dashboard> {
   // DashboardViewModel dashboardViewModel = DashboardViewModel();
   late DashboardViewModel dashboardViewModel;
 
-
   @override
   void initState() {
     super.initState();
@@ -36,13 +35,12 @@ class _DashboardState extends State<Dashboard> {
     super.initState();
   }
 
-    void _loadNotes() {
-      // final userId = "dcfff947-5e56-419b-b218-af29ef2e3669";
-      final userId = widget.user.sub;
-      dashboardViewModel.getUserNotes(userId);
-    }
+  void _loadNotes() {
+    // final userId = "dcfff947-5e56-419b-b218-af29ef2e3669";
+    final userId = widget.user.sub;
+    dashboardViewModel.getUserNotes(userId);
+  }
 
-    
   Future<void> _logout() async {
     try {
       await auth0.webAuthentication(scheme: 'smartnote').logout(useHTTPS: true);
@@ -78,8 +76,8 @@ class _DashboardState extends State<Dashboard> {
     }
 
     return dashboardViewModel.notes.data!
-      .where((note) => note.todoList?.isEmpty == true || !note.isCompleted)
-      .toList();
+        .where((note) => note.todoList?.isEmpty == true || !note.isCompleted)
+        .toList();
   }
 
   List<Note> get completedNotes {
@@ -93,13 +91,13 @@ class _DashboardState extends State<Dashboard> {
     }
 
     return dashboardViewModel.notes.data!
-      .where((note) => note.todoList?.isNotEmpty == true && note.isCompleted)
-      .toList();
+        .where((note) => note.todoList?.isNotEmpty == true && note.isCompleted)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
-   return ChangeNotifierProvider.value(
+    return ChangeNotifierProvider.value(
       value: dashboardViewModel,
       // create: (context) => dashboardViewModel,
       child: Scaffold(
@@ -113,8 +111,8 @@ class _DashboardState extends State<Dashboard> {
                     child: Padding(
                       padding: const EdgeInsets.all(20.0),
                       child: Consumer<DashboardViewModel>(
-                        builder: (context, dashboardViewModel, child) {
-                          return Column(
+                          builder: (context, dashboardViewModel, child) {
+                        return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
@@ -152,10 +150,10 @@ class _DashboardState extends State<Dashboard> {
                             const SizedBox(height: 20),
                             ElevatedButton.icon(
                               onPressed: () async {
-                                 try {
+                                try {
                                   final userId = widget.user.sub;
                                   // Call API to create a new note
-                                  
+
                                   // var response = await NetworkApiServices().postApiResponse(
                                   //   '/notes',
                                   //   {
@@ -166,24 +164,26 @@ class _DashboardState extends State<Dashboard> {
                                   //   },
                                   // );
 
-                                  var response = await dashboardViewModel.createNote(userId);
+                                  var response = await dashboardViewModel
+                                      .createNote(userId);
 
                                   // debugPrint("Response in Dashboard: " + response.toString());
                                   // debugPrint("id response " + response['id'].toString());
                                   // Note newNote = Note.fromJson(response);
-                                  
+
                                   if (response == null) {
                                     throw Exception('Failed to create note.');
-                                  }else{
+                                  } else {
+                                    _loadNotes();
 
-                                  _loadNotes();
+                                    // Ensure getSpecificUserNote completes before navigating
+                                    final Note createdNote =
+                                        await dashboardViewModel
+                                            .getSpecificUserNote(
+                                      response['id'].toString(),
+                                    );
 
-                                  // Ensure getSpecificUserNote completes before navigating
-                                  final Note createdNote = await dashboardViewModel.getSpecificUserNote(
-                                    response['id'].toString(),
-                                  );
-
-                                  // debugPrint('Created note: $newNote');
+                                    // debugPrint('Created note: $newNote');
                                     if (mounted) {
                                       Navigator.push(
                                         context,
@@ -197,12 +197,13 @@ class _DashboardState extends State<Dashboard> {
                                       throw Exception('Failed to create note.');
                                     }
                                   }
-                                  
                                 } catch (e) {
                                   // Handle error
                                   debugPrint('Failed to create note: $e');
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Failed to create note. Please try again.')),
+                                    const SnackBar(
+                                        content: Text(
+                                            'Failed to create note. Please try again.')),
                                   );
                                 }
                               },
@@ -235,8 +236,12 @@ class _DashboardState extends State<Dashboard> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            dashboardViewModel.notes.status != Status.completed
-                                ? const Center(child: CircularProgressIndicator())
+                            dashboardViewModel.notes.status !=
+                                        Status.completed &&
+                                    dashboardViewModel.notes.status ==
+                                        Status.loading
+                                ? const Center(
+                                    child: CircularProgressIndicator())
                                 : ongoingNotes.isNotEmpty
                                     ? Column(
                                         children: ongoingNotes.map((note) {
@@ -246,7 +251,8 @@ class _DashboardState extends State<Dashboard> {
                                           );
                                         }).toList(),
                                       )
-                                    : const Center(child: Text('No ongoing tasks')),
+                                    : const Center(
+                                        child: Text('No ongoing tasks')),
                             const SizedBox(height: 30),
                             const Text(
                               'Completed Tasks',
@@ -256,8 +262,12 @@ class _DashboardState extends State<Dashboard> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            dashboardViewModel.notes.status != Status.completed
-                                ? const Center(child: CircularProgressIndicator())
+                            dashboardViewModel.notes.status !=
+                                        Status.completed &&
+                                    dashboardViewModel.notes.status ==
+                                        Status.loading
+                                ? const Center(
+                                    child: CircularProgressIndicator())
                                 : completedNotes.isNotEmpty
                                     ? Column(
                                         children: completedNotes.map((note) {
@@ -267,13 +277,12 @@ class _DashboardState extends State<Dashboard> {
                                           );
                                         }).toList(),
                                       )
-                                    : const Center(child: Text('No ongoing tasks')),
+                                    : const Center(
+                                        child: Text('No ongoing tasks')),
                             const Spacer(),
                           ],
-                          );
-                        }
-
-                      ),
+                        );
+                      }),
                     ),
                   ),
                 ),
@@ -287,7 +296,7 @@ class _DashboardState extends State<Dashboard> {
         //   user: widget.user,
         //   notes: dashboardViewModel.notes.data ?? [],
         // ),
-        
+
         bottomNavigationBar: Consumer<DashboardViewModel>(
           builder: (context, viewModel, child) {
             return BottomNavBarWidget(
@@ -319,7 +328,6 @@ class _NoteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        
         final result = await Navigator.push(
           context,
           MaterialPageRoute(
@@ -332,7 +340,6 @@ class _NoteCard extends StatelessWidget {
         if (result == true) {
           onNoteDeleted(); // Trigger callback to refresh notes
         }
-
       },
       child: Container(
         padding: const EdgeInsets.all(20),

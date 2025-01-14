@@ -18,12 +18,10 @@ class _DetailNoteState extends State<DetailNote> {
 
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
-  
 
   List<Task> tasks = [];
   String _selectedStatus = 'Ongoing';
   String _selectedIcon = 'Gardening';
-
 
   @override
   void initState() {
@@ -36,14 +34,13 @@ class _DetailNoteState extends State<DetailNote> {
     _notesController.text = note.content ?? '';
 
     refreshPage();
-   
-
   }
+
   Future<void> refreshPage({bool refreshFromBackend = false}) async {
     if (refreshFromBackend) {
       await detailNoteViewModel.refetchNote();
     }
-    
+
     setState(() {
       _notesController.text = detailNoteViewModel.note.content ?? '';
       _titleController.text = detailNoteViewModel.note.title ?? '';
@@ -51,7 +48,8 @@ class _DetailNoteState extends State<DetailNote> {
 
       // check if note have any tasks
       if (tasks.isNotEmpty) {
-        _selectedStatus = tasks.any((task) => !task.isCompleted!) ? 'Ongoing' : 'Completed';
+        _selectedStatus =
+            tasks.any((task) => !task.isCompleted!) ? 'Ongoing' : 'Completed';
       } else {
         _selectedStatus = 'Ongoing';
       }
@@ -62,26 +60,24 @@ class _DetailNoteState extends State<DetailNote> {
 
     debugPrint("Page refreshed successfully.");
   }
-    // Future<void> refreshPage() async {
-    //   debugPrint("Page Refreshed!");
-    //   // Fetch the latest note data or update the UI state
-      
+  // Future<void> refreshPage() async {
+  //   debugPrint("Page Refreshed!");
+  //   // Fetch the latest note data or update the UI state
 
-    //   // Update the text controller with the current note content
-    //   _notesController.text = note.content ?? '';
+  //   // Update the text controller with the current note content
+  //   _notesController.text = note.content ?? '';
 
-    //   // Update tasks
-    //   debugPrint("TodoList"+ note.todoList.toString());
-    //   tasks = note.todoList ?? [];
+  //   // Update tasks
+  //   debugPrint("TodoList"+ note.todoList.toString());
+  //   tasks = note.todoList ?? [];
 
-    //   // Update the selected status based on the note's completion status
-    //   setState(() {
-    //     _selectedStatus = note.isComplete! ? 'Completed' : 'Ongoing';
-    //   });
+  //   // Update the selected status based on the note's completion status
+  //   setState(() {
+  //     _selectedStatus = note.isComplete! ? 'Completed' : 'Ongoing';
+  //   });
 
-    //   detailNoteViewModel.refetchNote();
-    // }      
-  
+  //   detailNoteViewModel.refetchNote();
+  // }
 
   final List<Map<String, dynamic>> iconCategories = [
     {'name': 'Gardening', 'icon': Icons.local_florist},
@@ -108,7 +104,6 @@ class _DetailNoteState extends State<DetailNote> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  
                   children: [
                     ElevatedButton(
                       onPressed: () {
@@ -127,54 +122,56 @@ class _DetailNoteState extends State<DetailNote> {
                     ),
                     Flexible(
                       child: Text(
-                         detailNoteViewModel.note.title ?? '',
+                        detailNoteViewModel.note.title ?? '',
                         style: title,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
                     ),
-
                     IconButton(
-                    icon: Icon(Icons.edit, color: Colors.grey),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          // Initialize with current note title
-                          TextEditingController titleController = TextEditingController(
-                            text: detailNoteViewModel.note.title ?? '',
-                          );
+                      icon: Icon(Icons.edit, color: Colors.grey),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            // Initialize with current note title
+                            TextEditingController titleController =
+                                TextEditingController(
+                              text: detailNoteViewModel.note.title ?? '',
+                            );
 
-                          return AlertDialog(
-                            title: Text('Edit Title'),
-                            content: TextField(
-                              controller: titleController,
-                              decoration: InputDecoration(
-                                hintText: 'Enter new title',
+                            return AlertDialog(
+                              title: Text('Edit Title'),
+                              content: TextField(
+                                controller: titleController,
+                                decoration: InputDecoration(
+                                  hintText: 'Enter new title',
+                                ),
                               ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context); // Just close the dialog without saving
-                                },
-                                child: Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  // Update the actual note title
-                                  detailNoteViewModel.setNoteTitle(titleController.text);
-                                  Navigator.pop(context);
-                                  refreshPage();
-                                },
-                                child: Text('Save'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(
+                                        context); // Just close the dialog without saving
+                                  },
+                                  child: Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    // Update the actual note title
+                                    detailNoteViewModel
+                                        .setNoteTitle(titleController.text);
+                                    Navigator.pop(context);
+                                    refreshPage();
+                                  },
+                                  child: Text('Save'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
                     ElevatedButton(
                       onPressed: () async {
                         bool? confirm = await showDialog(
@@ -200,8 +197,7 @@ class _DetailNoteState extends State<DetailNote> {
                         );
                         if (confirm == true) {
                           try {
-                            String? noteId =
-                                detailNoteViewModel.note.id;
+                            String? noteId = detailNoteViewModel.note.id;
                             String deleteEndpoint = 'notes/$noteId';
 
                             await NetworkApiServices()
@@ -209,7 +205,6 @@ class _DetailNoteState extends State<DetailNote> {
 
                             // pop back to dashboard
                             Navigator.of(context).pop(true);
-
 
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -239,7 +234,7 @@ class _DetailNoteState extends State<DetailNote> {
                 SizedBox(height: 20),
 
                 // Task Status
-                
+
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(16),
@@ -263,7 +258,8 @@ class _DetailNoteState extends State<DetailNote> {
                       ),
                       SizedBox(height: 8),
                       Container(
-                        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                         decoration: BoxDecoration(
                           color: _selectedStatus == 'Completed'
                               ? Colors.green.withOpacity(0.1)
@@ -353,7 +349,7 @@ class _DetailNoteState extends State<DetailNote> {
                         onChanged: (String? newValue) {
                           setState(() {
                             detailNoteViewModel.setIcon(newValue!);
-                          }); 
+                          });
                         },
                         items: iconCategories.map<DropdownMenuItem<String>>(
                             (Map<String, dynamic> category) {
@@ -387,39 +383,43 @@ class _DetailNoteState extends State<DetailNote> {
                           ),
                         ),
                         onPressed: detailNoteViewModel.isLoading
-                        ? null
-                        : () async {
-                          
-                            // Persist changes to the backend or database
-                            await detailNoteViewModel.saveNote(note);
+                            ? null
+                            : () async {
+                                // Persist changes to the backend or database
+                                await detailNoteViewModel.saveNote(note);
 
-                            // Persist changes to the backend for tasks
-                            for (var task in detailNoteViewModel.note.todoList!) {
-                              await detailNoteViewModel.updateTask(
-                                  note.id!, task.id!.toString(), task.todo!, task.isCompleted!);
-                            }
-                            
-                            if (detailNoteViewModel.error != null) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(detailNoteViewModel.error!),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            } else {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Note updated successfully'),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                            
-                              }
-                            }
-                          },
+                                // Persist changes to the backend for tasks
+                                for (var task
+                                    in detailNoteViewModel.note.todoList!) {
+                                  await detailNoteViewModel.updateTask(
+                                      note.id!,
+                                      task.id!.toString(),
+                                      task.todo!,
+                                      task.isCompleted!);
+                                }
+
+                                if (detailNoteViewModel.error != null) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text(detailNoteViewModel.error!),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                } else {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content:
+                                            Text('Note updated successfully'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -447,7 +447,9 @@ class _DetailNoteState extends State<DetailNote> {
                         ),
                         onPressed: () {
                           // TODO: CALL API TO GENERATE TODO LIST
-                          detailNoteViewModel.generateTasks();
+                          detailNoteViewModel.generateTasks().then((value) {
+                            refreshPage();
+                          });
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -501,7 +503,8 @@ class _DetailNoteState extends State<DetailNote> {
                             showDialog(
                               context: context,
                               builder: (BuildContext context) {
-                                TextEditingController taskController = TextEditingController();
+                                TextEditingController taskController =
+                                    TextEditingController();
 
                                 return AlertDialog(
                                   title: Text('Add New Task'),
@@ -520,10 +523,11 @@ class _DetailNoteState extends State<DetailNote> {
                                     ),
                                     TextButton(
                                       onPressed: () async {
-
-                                        await detailNoteViewModel.addTask(detailNoteViewModel.note.id!, taskController.text, false);
-                                        setState(() {
-                                        });
+                                        await detailNoteViewModel.addTask(
+                                            detailNoteViewModel.note.id!,
+                                            taskController.text,
+                                            false);
+                                        setState(() {});
                                         refreshPage();
                                         Navigator.pop(context);
                                       },
@@ -636,23 +640,33 @@ class _DetailNoteState extends State<DetailNote> {
                                             TextButton(
                                               onPressed: () async {
                                                 // update task
-                                                String todoId = detailNoteViewModel
-                                                    .note.todoList![index].id
-                                                    .toString();
-                                                String title = editController
-                                                    .text;
-                                                bool isFinished = detailNoteViewModel
-                                                    .note.todoList![index]
-                                                    .isCompleted ?? false;
-                                                detailNoteViewModel
-                                                    .updateTask(detailNoteViewModel.note.id!, todoId, title, isFinished); 
+                                                String todoId =
+                                                    detailNoteViewModel.note
+                                                        .todoList![index].id
+                                                        .toString();
+                                                String title =
+                                                    editController.text;
+                                                bool isFinished =
+                                                    detailNoteViewModel
+                                                            .note
+                                                            .todoList![index]
+                                                            .isCompleted ??
+                                                        false;
+                                                detailNoteViewModel.updateTask(
+                                                    detailNoteViewModel
+                                                        .note.id!,
+                                                    todoId,
+                                                    title,
+                                                    isFinished);
 
                                                 setState(() {
                                                   detailNoteViewModel
-                                                      .note.todoList![index]
+                                                      .note
+                                                      .todoList![index]
                                                       .todo = title;
                                                   detailNoteViewModel
-                                                      .note.todoList![index]
+                                                      .note
+                                                      .todoList![index]
                                                       .isCompleted = isFinished;
                                                 });
                                                 refreshPage();
@@ -664,19 +678,22 @@ class _DetailNoteState extends State<DetailNote> {
                                         );
                                       },
                                     );
-                                  } else if (value == 'Delete') { 
+                                  } else if (value == 'Delete') {
                                     debugPrint("Deleting task at index $index");
-                                    
-                                    detailNoteViewModel.deleteTask(
+
+                                    detailNoteViewModel
+                                        .deleteTask(
                                       detailNoteViewModel.note.id!,
                                       tasks[index].id.toString(),
-                                    ).then((_) {
+                                    )
+                                        .then((_) {
                                       setState(() {
                                         tasks.removeAt(index);
                                       });
                                       debugPrint("Task deleted successfully.");
                                     }).catchError((error) {
-                                      debugPrint("Error during task deletion: $error");
+                                      debugPrint(
+                                          "Error during task deletion: $error");
                                     });
                                   }
                                 },
