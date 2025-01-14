@@ -25,42 +25,49 @@ class _CompletedTaskState extends State<CompletedTask> {
   }
 
   Future<void> _fetchCompletedTasks() async {
-    setState(() {
-      isLoading = true;
-    });
+  setState(() {
+    isLoading = true;
+  });
 
-    try {
-      await dashboardViewModel.getUserNotes("USER_001");
-      final notesData = dashboardViewModel.notes.data ?? [];
-      List<Task> allCompletedTasks = [];
-      for (var note in notesData) {
-        allCompletedTasks.addAll(note.getCompletedTasks());
+  try {
+    // Fetch all notes for the user
+    await dashboardViewModel.getUserNotes(widget.user.id);
+
+    // Retrieve notes data from the dashboard view model
+    final notesData = dashboardViewModel.notes.data ?? [];
+
+    // Process the tasks in each note to extract completed ones
+    final allCompletedTasks = <Task>[];
+    for (final note in notesData) {
+      if (note.todoList != null) {
+        allCompletedTasks.addAll(
+          note.todoList!.where((task) => task.isCompleted == true),
+        );
       }
-
-      setState(() {
-        completedTasks = allCompletedTasks;
-      });
-    } catch (e) {
-      print('Error fetching completed tasks: $e');
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
     }
-  }
 
-  List<Task> _getTasksForDay(DateTime day) {
-    final tasksForDay = completedTasks.where((task) {
-      for (var note in widget.notes) {
-        if (note.todoList != null && note.todoList!.contains(task)) {
-          final noteUpdatedAt = DateTime.parse(note.updatedAt!);
-          return isSameDay(noteUpdatedAt, day);
-        }
-      }
-      return false;
-    }).toList();
-    return tasksForDay;
+    // Update the state with completed tasks
+    setState(() {
+      completedTasks = allCompletedTasks;
+    });
+  } catch (error) {
+    print('Error fetching notes and extracting tasks: $error');
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
   }
+}
+
+List<Note> _getNotesForDay(DateTime day) {
+  return widget.notes.where((note) {
+    if (note.updatedAt != null) {
+      final noteDate = DateTime.parse(note.updatedAt!);
+      return isSameDay(noteDate, day);
+    }
+    return false;
+  }).toList();
+}
 
   void _onItemTapped(int index) {
     setState(() {
@@ -77,123 +84,129 @@ class _CompletedTaskState extends State<CompletedTask> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final tasksForSelectedDay =
-        _selectedDay != null ? _getTasksForDay(_selectedDay!) : [];
+Widget build(BuildContext context) {
+  // Get notes for the selected day
+  final notesForSelectedDay =
+      _selectedDay != null ? _getNotesForDay(_selectedDay!) : [];
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Center(
-          child: Text(
-            'Completed Tasks',
-            style: title.copyWith(color: Colors.white),
-          ),
-        ),
-        backgroundColor: primaryColor,
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                        ),
-                      ],
-                    ),
-                    child: TableCalendar(
-                      firstDay: DateTime.utc(2000, 1, 1),
-                      lastDay: DateTime.utc(2100, 12, 31),
-                      focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) =>
-                          isSameDay(_selectedDay, day),
-                      onDaySelected: (selectedDay, focusedDay) {
-                        setState(() {
-                          _selectedDay = selectedDay;
-                          _focusedDay = focusedDay;
-                        });
-                      },
-                      eventLoader: (day) => _getTasksForDay(day),
-                      headerStyle: HeaderStyle(
-                        formatButtonVisible: false,
-                        titleTextStyle: title.copyWith(color: Colors.white),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        leftChevronIcon:
-                            Icon(Icons.chevron_left, color: Colors.white),
-                        rightChevronIcon:
-                            Icon(Icons.chevron_right, color: Colors.white),
-                        titleCentered: true,
-                      ),
-                      calendarStyle: CalendarStyle(
-                        todayDecoration: BoxDecoration(
-                          color: primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                        selectedDecoration: BoxDecoration(
-                          color: secondaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                        markerDecoration: BoxDecoration(
-                          color: primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                        markersMaxCount: 3,
-                        markersAlignment: Alignment.bottomCenter,
-                        weekendTextStyle: content1.copyWith(
-                          color: const Color.fromARGB(255, 170, 43, 34),
-                        ),
-                        defaultTextStyle: content1,
-                        outsideDaysVisible: false,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    _selectedDay != null
-                        ? '${_selectedDay!.day} ${_getMonthName(_selectedDay!.month)} ${_selectedDay!.year}'
-                        : 'Tasks for Today',
-                    style: title,
-                  ),
-                  SizedBox(height: 8),
-                  if (_selectedDay != null &&
-                      tasksForSelectedDay.isNotEmpty) ...[
-                    ...tasksForSelectedDay.map((task) => ListTile(
-                          leading:
-                              Icon(Icons.check_circle, color: primaryColor),
-                          title: Text(task.todo ?? '', style: content1),
-                        )),
-                  ] else
-                    Text(
-                      'No completed tasks for the selected date.',
-                      style: content1,
-                    ),
-                ],
-              ),
-            ),
-      bottomNavigationBar: BottomNavBarWidget(
-        currentIndex: _selectedIndex,
-        onItemTapped: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        user: widget.user,
-        notes: widget.notes,
-      ),
-    );
+  // Extract tasks from the notes
+  final tasksForSelectedDay = <Task>[];
+  for (final note in notesForSelectedDay) {
+    if (note.todoList != null) {
+      tasksForSelectedDay.addAll(note.todoList!);
+    }
   }
+
+  return Scaffold(
+    appBar: AppBar(
+      automaticallyImplyLeading: false,
+      title: Center(
+        child: Text(
+          'Completed Tasks',
+          style: title.copyWith(color: Colors.white),
+        ),
+      ),
+      backgroundColor: primaryColor,
+    ),
+    body: isLoading
+        ? Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.3),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: TableCalendar(
+                    firstDay: DateTime.utc(2000, 1, 1),
+                    lastDay: DateTime.utc(2100, 12, 31),
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    eventLoader: (day) => _getNotesForDay(day),
+                    headerStyle: HeaderStyle(
+                      formatButtonVisible: false,
+                      titleTextStyle: title.copyWith(color: Colors.white),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      leftChevronIcon:
+                          Icon(Icons.chevron_left, color: Colors.white),
+                      rightChevronIcon:
+                          Icon(Icons.chevron_right, color: Colors.white),
+                      titleCentered: true,
+                    ),
+                    calendarStyle: CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: primaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                      selectedDecoration: BoxDecoration(
+                        color: secondaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                      markerDecoration: BoxDecoration(
+                        color: primaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                      markersMaxCount: 3,
+                      markersAlignment: Alignment.bottomCenter,
+                      weekendTextStyle: content1.copyWith(
+                        color: const Color.fromARGB(255, 170, 43, 34),
+                      ),
+                      defaultTextStyle: content1,
+                      outsideDaysVisible: false,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  _selectedDay != null
+                      ? '${_selectedDay!.day} ${_getMonthName(_selectedDay!.month)} ${_selectedDay!.year}'
+                      : 'Tasks for Today',
+                  style: title,
+                ),
+                SizedBox(height: 8),
+                if (_selectedDay != null && tasksForSelectedDay.isNotEmpty) ...[
+                  ...tasksForSelectedDay.map((task) => ListTile(
+                        leading: Icon(Icons.check_circle, color: primaryColor),
+                        title: Text(task.todo ?? '', style: content1),
+                      )),
+                ] else
+                  Text(
+                    'No completed tasks for the selected date.',
+                    style: content1,
+                  ),
+              ],
+            ),
+          ),
+    bottomNavigationBar: BottomNavBarWidget(
+      currentIndex: _selectedIndex,
+      onItemTapped: (index) {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      user: widget.user,
+      notes: widget.notes,
+    ),
+  );
+}
 
   String _getMonthName(int month) {
     const months = [
