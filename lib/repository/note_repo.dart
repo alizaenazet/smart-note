@@ -1,63 +1,139 @@
-import 'dart:ffi';
+  import 'dart:ffi';
 
-import 'package:flutter/material.dart';
-import 'package:smart_note/data/network/netwrok_api_services.dart';
-import 'package:smart_note/model/note.dart';
-import 'package:smart_note/model/task.dart';
+  import 'package:flutter/material.dart';
+  import 'package:smart_note/data/network/netwrok_api_services.dart';
+  import 'package:smart_note/model/note.dart';
+  import 'package:smart_note/model/task.dart';
 
-class NoteRepository {
-  final _apiServices = NetworkApiServices();
+  class NoteRepository {
+    final _apiServices = NetworkApiServices();
 
-  Future<List<Note>> getNotesByUserId(String userId) async {
-    try {
-      dynamic response = await _apiServices
-          .getApiResponse('notes', queryParams: {'user_id': userId});
-      List<Note> notes = [];
-      debugPrint('\n🔥🔥\n🔥🔥🔥\n🔥 response Notes Fetch: $response');
+    // Future<List<Note>> getNotesByUserId(String userId) async {
+    //   try {
+    //     final response = await _apiServices
+    //         .getApiResponse('notes', queryParams: {'user_id': userId});
+    //     List<Note> notes = [];
+    //     // debugPrint('\n🔥🔥\n🔥🔥🔥\n🔥 response Notes Fetch: $response');
 
-      notes = (response as List<dynamic>).map((e) => Note.fromMap(e)).toList();
+    //     notes = (response as List<dynamic>).map((e) => Note.fromMap(e)).toList();
 
-      debugPrint('CASTING NOTES: $notes');
-      return notes;
-    } catch (e) {
-      debugPrint("ERROR: $e");
-      rethrow;
+    //     // debugPrint('CASTING NOTES: $notes');
+    //     return notes;
+    //   } catch (e) {
+    //     debugPrint("ERROR: $e");
+    //     rethrow;
+    //   }
+    // }
+    Future<List<Note>> getNotesByUserId(String userId) async {
+        try {
+          final response = await _apiServices
+              .getApiResponse('notes', queryParams: {'user_id': userId});
+          final List<Note> notes = (response as List<dynamic>)
+              .map((e) => Note.fromMap(e as Map<String, dynamic>))
+              .toList();
+          return notes;
+        } catch (e) {
+          debugPrint("ERROR: $e");
+          rethrow;
+        }
+      }
+
+    // Future <dynamic> createNote(String userId) async {
+    //   dynamic response = await NetworkApiServices().postApiResponse('/notes', {
+    //     'user_id': userId,
+    //     'title': 'New Note',
+    //     'content': 'No content',
+    //     'icon': 'Work',
+    //   });
+    //   debugPrint('Response: $response');
+    //   return response;
+    // }
+    Future<Map<String, dynamic>> createNote(String userId) async {
+        try {
+          final response = await _apiServices.postApiResponse('/notes', {
+            'user_id': userId,
+            'title': 'New Note',
+            'content': 'No content',
+            'icon': 'Work',
+          });
+          return response;
+          } catch (e) {
+            debugPrint("ERROR: $e");
+            rethrow;
+        }
+      }
+
+    // Future<Note> getNoteById(String noteId) async {
+    //   try {
+    //     dynamic response = await _apiServices.getApiResponse('note/$noteId');
+    //     Note note = Note.fromMap(response);
+    //     // debugPrint('CASTING NOTE By ID: $note');
+    //     return note;
+    //   } catch (e) {
+    //     debugPrint("ERROR: $e");
+    //     rethrow;
+    //   }
+    // }
+
+    Future<Note> getNoteById(String noteId) async {
+      try {
+        final response = await _apiServices.getApiResponse('note/$noteId');
+        return Note.fromMap(response);
+      } catch (e) {
+        debugPrint("ERROR: $e");
+        rethrow;
+      }
     }
-  }
 
-  Future <dynamic> createNote(String userId) async {
-    dynamic response = await NetworkApiServices().postApiResponse('/notes', {
-      'user_id': userId,
-      'title': 'New Note',
-      'content': 'No content',
-      'icon': 'Work',
-    });
-    debugPrint('Response: $response');
-    return response;
-  }
+    // Future<List<Task>> generateNoteTasks(String noteId, String note) async {
+    //   try {
+    //     dynamic response = await _apiServices
+    //         .postApiResponse('notes/$noteId/generate-todos', {"note": note});
+    //     List<Task> tasks = [];
+    //     // debugPrint('\n🔥🔥\n🔥🔥🔥\n🔥 response Tasks Fetch: $response');
 
-  Future<Note> getNoteById(String noteId) async {
+    //     tasks = (response as List<dynamic>).map((e) => Task.fromMap(e)).toList();
+
+    //     // debugPrint('\n\n🚨🚨🚨\n🚨🚨\n🚨CASTING TASKS: $tasks');
+    //     return tasks;
+    //   } catch (e) {
+    //     debugPrint("ERROR: $e");
+    //     rethrow;
+    //   }
+    // }
+
+    // Future updateNote(Note note) async {
+    //   try {
+    //     dynamic response = await _apiServices.putApiResponse('notes/${note.id}',
+    //         note.toMap(), queryParams: {"title": note.title,"content": note.content,"icon": note.icon});
+    //     Note updatedNote = Note.fromMap(response);
+    //     // debugPrint('CASTING NOTE: $updatedNote');
+    //     return updatedNote;
+    //   } catch (e) {
+    //     debugPrint("ERROR: $e");
+    //     rethrow;
+    //   }
+    // }
+
+
+    // Future createTodo(String noteId, String text, bool isFinished) async {
+    //   try {
+    //     dynamic response = await _apiServices.postApiResponse('notes/$noteId/todos',
+    //         {"text": text, "is_finished": isFinished});
+    //     return response;
+    //   } catch (e) {
+    //     debugPrint("ERROR: $e");
+    //     rethrow;
+    //   }
+    // }
+
+    Future<List<Task>> generateNoteTasks(String noteId, String note) async {
     try {
-      dynamic response = await _apiServices.getApiResponse('note/$noteId');
-      Note note = Note.fromMap(response);
-      debugPrint('CASTING NOTE By ID: $note');
-      return note;
-    } catch (e) {
-      debugPrint("ERROR: $e");
-      rethrow;
-    }
-  }
-
-  Future<List<Task>> generateNoteTasks(String noteId, String note) async {
-    try {
-      dynamic response = await _apiServices
+      final response = await _apiServices
           .postApiResponse('notes/$noteId/generate-todos', {"note": note});
-      List<Task> tasks = [];
-      debugPrint('\n🔥🔥\n🔥🔥🔥\n🔥 response Tasks Fetch: $response');
-
-      tasks = (response as List<dynamic>).map((e) => Task.fromMap(e)).toList();
-
-      debugPrint('\n\n🚨🚨🚨\n🚨🚨\n🚨CASTING TASKS: $tasks');
+      final List<Task> tasks = (response as List<dynamic>)
+          .map((e) => Task.fromMap(e as Map<String, dynamic>))
+          .toList();
       return tasks;
     } catch (e) {
       debugPrint("ERROR: $e");
@@ -65,28 +141,34 @@ class NoteRepository {
     }
   }
 
-  Future updateNote(Note note) async {
+  Future<Note> updateNote(Note note) async {
     try {
-      dynamic response = await _apiServices.putApiResponse('notes/${note.id}',
-          note.toMap(), queryParams: {"title": note.title,"content": note.content,"icon": note.icon});
-      Note updatedNote = Note.fromMap(response);
-      debugPrint('CASTING NOTE: $updatedNote');
-      return updatedNote;
+      final response = await _apiServices.putApiResponse(
+          'notes/${note.id}', note.toMap(),
+          queryParams: {
+            "title": note.title,
+            "content": note.content,
+            "icon": note.icon
+          });
+      return Note.fromMap(response);
     } catch (e) {
       debugPrint("ERROR: $e");
       rethrow;
     }
   }
 
-
-  Future createTodo(String noteId, String text, bool isFinished) async {
+  Future<Map<String, dynamic>> createTodo(
+      String noteId, String text, bool isFinished) async {
     try {
-      dynamic response = await _apiServices.postApiResponse('notes/$noteId/todos',
-          {"text": text, "is_finished": isFinished});
+      final response = await _apiServices
+          .postApiResponse('notes/$noteId/todos', {
+        "text": text,
+        "is_finished": isFinished,
+      });
       return response;
     } catch (e) {
       debugPrint("ERROR: $e");
       rethrow;
     }
   }
-}
+  }

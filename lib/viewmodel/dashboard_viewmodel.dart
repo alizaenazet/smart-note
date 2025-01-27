@@ -20,15 +20,15 @@ class DashboardViewModel with ChangeNotifier {
   Future<void> getUserNotes(String userId) async {
     setNotes(ApiResponse.loading());
     // _notes = ApiResponse.loading();
-    notifyListeners();
+    
     try {
       final notes = await _noteRepo.getNotesByUserId(userId);
       setNotes(ApiResponse.completed(notes));
     } catch (e) {
-      print("ERROR: $e");
+      // print("ERROR: $e");
       // _notes = ApiResponse<List<Note>>.error(e.toString());
       setNotes(ApiResponse<List<Note>>.error(e.toString()));
-      notifyListeners();
+
     }
   }
 
@@ -40,16 +40,14 @@ class DashboardViewModel with ChangeNotifier {
   Future <Note> getSpecificUserNote(String noteId) async {
     specificNote(ApiResponse.loading());
     // _notes = ApiResponse.loading();
-    notifyListeners();
     try {
       final note = await _noteRepo.getNoteById(noteId);
       specificNote(ApiResponse.completed(note));
       return note;
     } catch (e) {
-      print("ERROR: $e");
+      // print("ERROR: $e");
       // _notes = ApiResponse<List<Note>>.error(e.toString());
       specificNote(ApiResponse<Note>.error(e.toString()));
-      notifyListeners();
       return Note();
     }
 

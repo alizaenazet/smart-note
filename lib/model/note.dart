@@ -99,31 +99,6 @@ class Note extends Equatable {
     }
   }
 
-  // String get getIconName {
-  //   switch (icon) {
-  //     case 'work':
-  //       return 'Work';
-  //     case 'gardening':
-  //       return 'Gardening';
-  //     case 'sports':
-  //       return 'Sports';
-  //     case 'cooking':
-  //       return 'Cooking';
-  //     case 'study':
-  //       return 'Study';
-  //     case 'travel':
-  //       return 'Travel';
-  //     case 'shopping':
-  //       return 'Shopping';
-  //     case 'health':
-  //       return 'Health';
-  //     case 'finance':
-  //       return 'Finance';
-  //     default:
-  //       return 'Note';
-  //   }
-  // }
-
   bool get isCompleted {
     return todoList!.every((task) => task.isCompleted!);
   }

@@ -9,152 +9,122 @@ import '../app_exception.dart';
 import 'package:http/http.dart' as http;
 
 class NetworkApiServices implements BaseApiServices {
-  @override
-  Future deleteApiResponse(String endpoint) async {
+  Future<dynamic> _handleApiCall(
+    Future<http.Response> Function() apiCall,
+    String endpoint,
+    String method,
+  ) async {
     try {
-      print("\n\n🛜🛜🛜\nDELETE API SERVICE CALLED");
-      final uri = Uri.https(Const.smartNoteBaseUrl, endpoint);
-      print("\n\n🛜🛜🛜\nDELETE URI: $uri");
-      final response = await http.delete(
-        uri,
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-      );
-      if (response.statusCode != 200) {
-              throw Exception('Failed to delete note');
-      }
-      debugPrint('Response [$endpoint]: $response');
-      return returnResponse(response);
+      debugPrint('\n\n🛜🛜🛜\n$method API SERVICE CALLED');
+      final response = await apiCall();
+      debugPrint('Response [$endpoint]: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
+      return _returnResponse(response);
     } on SocketException {
       throw NoInternetException('No Internet Connection');
     } on TimeoutException {
       throw FetchDataException('Api not responding');
     } catch (e) {
-      print("\n\n🛜🛜🛜\nERROR: $e");
+      debugPrint('\n\n🛜🛜🛜\nERROR: $e');
       throw FetchDataException(e.toString());
     }
+  }
+
+  @override
+  Future deleteApiResponse(String endpoint) async {
+    final uri = Uri.https(Const.smartNoteBaseUrl, endpoint);
+    return _handleApiCall(
+      () => http.delete(
+        uri,
+        headers: const <String, String>{
+          'Content-Type': 'application/json',
+        },
+      ),
+      endpoint,
+      'DELETE',
+    );
   }
 
   @override
   Future getApiResponse(String endpoint,
       {Map<String, dynamic>? queryParams}) async {
-    try {
-      print("\n\n🛜🛜🛜\nNETWORK API SERVICE CALLED");
-      print(Const.smartNoteBaseUrl);
-      final queryParamsWithKey = {
-        ...?queryParams,
-      };
-      debugPrint(
-          "\n\n🛜🛜🛜\nENDPOINT: $endpoint $queryParams"); // Executed fine
-      final uri = Uri.https(
-          Const.smartNoteBaseUrl, endpoint, queryParamsWithKey); // NOT WORKING
-      print("\n\n🛜🛜🛜\nURI: $uri");
-      final response = await http.get(
+    final queryParamsWithKey = {
+      ...?queryParams,
+    };
+    final uri = Uri.https(
+        Const.smartNoteBaseUrl, endpoint, queryParamsWithKey);
+    return _handleApiCall(
+      () => http.get(
         uri,
-        headers: <String, String>{
+        headers: const <String, String>{
           'Content-Type': 'application/json',
         },
-      );
-      debugPrint('Response [$endpoint]: $response');
-      return returnResponse(response);
-    } on SocketException {
-      throw NoInternetException('');
-    } on TimeoutException {
-      throw FetchDataException('Api not responding');
-    } catch (e) {
-      print("\n\n🛜🛜🛜\nERROR: $e");
-      throw FetchDataException(e.toString());
-    }
+      ),
+      endpoint,
+      'GET',
+    );
   }
 
   @override
-  Future postApiResponse(String endpoint, data,
+  Future postApiResponse(String endpoint, dynamic data,
       {Map<String, dynamic>? queryParams}) async {
-    try {
-      final queryParamsWithKey = {
-        ...?queryParams,
-      };
-      final uri =
-          Uri.https(Const.smartNoteBaseUrl, endpoint, queryParamsWithKey);
-
-      // Debug print to verify the request
-      debugPrint('Request URL: $uri');
-      debugPrint("data: $data");
-      debugPrint('Request Body: ${jsonEncode(data)}');
-
-      final response = await http.post(
+    final queryParamsWithKey = {
+      ...?queryParams,
+    };
+    final uri =
+        Uri.https(Const.smartNoteBaseUrl, endpoint, queryParamsWithKey);
+    return _handleApiCall(
+      () => http.post(
         uri,
-        headers: <String, String>{
+        headers: const <String, String>{
           'Content-Type': 'application/json',
         },
         body: data != null ? jsonEncode(data) : null,
-      );
-      // debugPrint('Response [$endpoint]: $response');
-
-      // Debugging the raw response
-      debugPrint('Response Status: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      debugPrint("Response RunTimeType: ${response.runtimeType}");
-
-      return returnResponse(response);
-    } on SocketException {
-      throw NoInternetException('');
-    } on TimeoutException {
-      throw FetchDataException('Api not responding');
-    }
+      ),
+      endpoint,
+      'POST',
+    );
   }
 
   @override
   Future putApiResponse(String endpoint, dynamic data,
       {Map<String, dynamic>? queryParams}) async {
-    try {
-      print("\n\n🛜🛜🛜\nPUT API SERVICE CALLED");
-      final queryParamsWithKey = {
-        ...?queryParams,
-      };
-      debugPrint("Icon:" + queryParamsWithKey.toString());
-      final uri =
-          Uri.https(Const.smartNoteBaseUrl, endpoint, queryParamsWithKey);
-    print("\n\n🛜🛜🛜\nPUT URI: $uri");
-    final response = await http.put(
-      uri,
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-      },
-      body: data != null ? jsonEncode(data) : null,
+    final queryParamsWithKey = {
+      ...?queryParams,
+    };
+    final uri =
+        Uri.https(Const.smartNoteBaseUrl, endpoint, queryParamsWithKey);
+    return _handleApiCall(
+      () => http.put(
+        uri,
+        headers: const <String, String>{
+          'Content-Type': 'application/json',
+        },
+        body: data != null ? jsonEncode(data) : null,
+      ),
+      endpoint,
+      'PUT',
     );
-    debugPrint('Response [$endpoint]: $response');
-    debugPrint('Response status code: ' + response.statusCode.toString());
-    return returnResponse(response);
-  } on SocketException {
-    throw NoInternetException('No Internet Connection');
-  } on TimeoutException {
-    throw FetchDataException('API not responding');
-  } catch (e) {
-    print("\n\n🛜🛜🛜\nERROR: $e");
-    throw FetchDataException(e.toString());
-  }
   }
 
-
-  dynamic returnResponse(http.Response response) {
-    switch (response.statusCode) {
-      case 201:
-        dynamic responseJson = jsonDecode(response.body);
-        return responseJson;
-      case 200:
-        dynamic responseJson = jsonDecode(response.body);
-        return responseJson;
-      case 400:
-        throw BadRequestException(response.body.toString());
-      case 500:
-      case 404:
-        throw UnauthorisedException(response.body.toString());
-      default:
-        throw FetchDataException(
-            'Error occured while communicating with server');
+  dynamic _returnResponse(http.Response response) {
+    try {
+      final responseJson = jsonDecode(response.body);
+      switch (response.statusCode) {
+        case 200:
+        case 201:
+          return responseJson;
+        case 400:
+          throw BadRequestException(response.body.toString());
+        case 404:
+        case 500:
+          throw UnauthorisedException(response.body.toString());
+        default:
+          throw FetchDataException(
+              'Error occurred while communicating with server');
+      }
+    } on FormatException {
+      throw FetchDataException('Invalid JSON response');
     }
   }
 }

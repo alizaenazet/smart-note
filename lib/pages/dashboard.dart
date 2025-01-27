@@ -24,15 +24,8 @@ class _DashboardState extends State<Dashboard> {
     auth0 = Auth0('dev-kyls15gex83xgz5e.us.auth0.com',
         'DQBYRNAseJL4FpWriBhUrlqU54HumA0l');
 
-    // TODO: CHANGE USER ID BY AUTH0 ID
-    // dashboardViewModel.getUserNotes("USER_001 ");
-
     dashboardViewModel = DashboardViewModel();
     _loadNotes();
-    // from auth0 fetch the user id logged in
-    // final userId = widget.user.sub;
-    // dashboardViewModel.getUserNotes("dcfff947-5e56-419b-b218-af29ef2e3669");
-    super.initState();
   }
 
   void _loadNotes() {
@@ -65,35 +58,44 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
-  List<Note> get ongoingNotes {
-    if (dashboardViewModel.notes.status != Status.completed) {
-      return [];
-    }
+  // List<Note> get ongoingNotes {
+  //   if (dashboardViewModel.notes.status != Status.completed) {
+  //     return [];
+  //   }
 
-    if (dashboardViewModel.notes.status == Status.completed &&
-        dashboardViewModel.notes.data == []) {
-      return [];
-    }
+  //   if (dashboardViewModel.notes.status == Status.completed &&
+  //       dashboardViewModel.notes.data == []) {
+  //     return [];
+  //   }
 
-    return dashboardViewModel.notes.data!
-        .where((note) => note.todoList?.isEmpty == true || !note.isCompleted)
-        .toList();
-  }
+  //   return dashboardViewModel.notes.data!
+  //       .where((note) => note.todoList?.isEmpty == true || !note.isCompleted)
+  //       .toList();
+  // }
 
-  List<Note> get completedNotes {
-    if (dashboardViewModel.notes.status != Status.completed) {
-      return [];
-    }
+  // List<Note> get completedNotes {
+  //   if (dashboardViewModel.notes.status != Status.completed) {
+  //     return [];
+  //   }
 
-    if (dashboardViewModel.notes.status == Status.completed &&
-        dashboardViewModel.notes.data == []) {
-      return [];
-    }
+  //   if (dashboardViewModel.notes.status == Status.completed &&
+  //       dashboardViewModel.notes.data == []) {
+  //     return [];
+  //   }
 
-    return dashboardViewModel.notes.data!
-        .where((note) => note.todoList?.isNotEmpty == true && note.isCompleted)
-        .toList();
-  }
+  //   return dashboardViewModel.notes.data!
+  //       .where((note) => note.todoList?.isNotEmpty == true && note.isCompleted)
+  //       .toList();
+  // }
+  List<Note> get ongoingNotes => dashboardViewModel.notes.data
+          ?.where((note) => note.todoList?.isEmpty == true || !note.isCompleted)
+          .toList() ??
+      [];
+
+  List<Note> get completedNotes => dashboardViewModel.notes.data
+          ?.where((note) => note.todoList?.isNotEmpty == true && note.isCompleted)
+          .toList() ??
+      [];
 
   @override
   Widget build(BuildContext context) {
@@ -152,25 +154,9 @@ class _DashboardState extends State<Dashboard> {
                               onPressed: () async {
                                 try {
                                   final userId = widget.user.sub;
-                                  // Call API to create a new note
-
-                                  // var response = await NetworkApiServices().postApiResponse(
-                                  //   '/notes',
-                                  //   {
-                                  //     'user_id': userId,
-                                  //     'title': 'New Note',
-                                  //     'content': '',
-                                  //     'icon': 'iconName',
-                                  //   },
-                                  // );
-
                                   var response = await dashboardViewModel
                                       .createNote(userId);
-
-                                  // debugPrint("Response in Dashboard: " + response.toString());
-                                  // debugPrint("id response " + response['id'].toString());
-                                  // Note newNote = Note.fromJson(response);
-
+                                      
                                   if (response == null) {
                                     throw Exception('Failed to create note.');
                                   } else {

@@ -37,14 +37,20 @@ class _CompletedTaskState extends State<CompletedTask> {
     final notesData = dashboardViewModel.notes.data ?? [];
 
     // Process the tasks in each note to extract completed ones
-    final allCompletedTasks = <Task>[];
-    for (final note in notesData) {
-      if (note.todoList != null) {
-        allCompletedTasks.addAll(
-          note.todoList!.where((task) => task.isCompleted == true),
-        );
-      }
-    }
+    // final allCompletedTasks = <Task>[];
+    // for (final note in notesData) {
+    //   if (note.todoList != null) {
+    //     allCompletedTasks.addAll(
+    //       note.todoList!.where((task) => task.isCompleted == true),
+    //     );
+    //   }
+    // }
+      final allCompletedTasks = notesData.whereType<Note>().fold<List<Task>>(
+        [],
+        (previousValue, note) => previousValue
+          ..addAll(note.todoList?.where((task) => task.isCompleted == true) ??
+              []),
+      );
 
     // Update the state with completed tasks
     setState(() {
@@ -90,12 +96,16 @@ Widget build(BuildContext context) {
       _selectedDay != null ? _getNotesForDay(_selectedDay!) : [];
 
   // Extract tasks from the notes
-  final tasksForSelectedDay = <Task>[];
-  for (final note in notesForSelectedDay) {
-    if (note.todoList != null) {
-      tasksForSelectedDay.addAll(note.todoList!);
-    }
-  }
+  // final tasksForSelectedDay = <Task>[];
+  // for (final note in notesForSelectedDay) {
+  //   if (note.todoList != null) {
+  //     tasksForSelectedDay.addAll(note.todoList!);
+  //   }
+  // }
+  final tasksForSelectedDay = notesForSelectedDay.fold<List<Task>>(
+      [],
+      (previousValue, note) => previousValue..addAll(note.todoList ?? []),
+  );
 
   return Scaffold(
     appBar: AppBar(
@@ -174,20 +184,23 @@ Widget build(BuildContext context) {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   _selectedDay != null
                       ? '${_selectedDay!.day} ${_getMonthName(_selectedDay!.month)} ${_selectedDay!.year}'
                       : 'Tasks for Today',
                   style: title,
                 ),
-                SizedBox(height: 8),
-                if (_selectedDay != null && tasksForSelectedDay.isNotEmpty) ...[
-                  ...tasksForSelectedDay.map((task) => ListTile(
-                        leading: Icon(Icons.check_circle, color: primaryColor),
-                        title: Text(task.todo ?? '', style: content1),
-                      )),
-                ] else
+                const SizedBox(height: 8),
+                 const SizedBox(height: 8),
+                  if (_selectedDay != null && tasksForSelectedDay.isNotEmpty)
+                    ...tasksForSelectedDay.map((task) => ListTile(
+                          leading:
+                              Icon(Icons.check_circle, color: primaryColor),
+                          title: Text(task.todo ?? '', style: content1),
+                    )
+                  )
+                   else
                   Text(
                     'No completed tasks for the selected date.',
                     style: content1,
